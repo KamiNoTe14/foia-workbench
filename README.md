@@ -1,8 +1,21 @@
-# FOIA Calendar Review
+# FOIA Workbench
 
-A free, offline tool for school districts (and other public bodies) to review a Google Calendar export for a public-records request, redact exempt information, and produce a clean release copy.
+A free, offline workbench for school districts and other public bodies that need to answer public-records requests. Load what you exported from Google Vault, review it, redact exempt information, and produce a clean release copy for the requester.
 
-**[Open the tool →](https://kaminote14.github.io/foia-calendar-review-tool/)**
+**[Open FOIA Workbench →](https://kaminote14.github.io/foia-workbench/)**
+
+## Record types
+
+| Workspace | Vault export | Status |
+|---|---|---|
+| **Calendar** | `.ics` | ✅ Available |
+| **Email** | Gmail `.mbox` | 🚧 Planned |
+| **Chat & Groups** | Google Chat / Groups `.mbox` | 🚧 Planned |
+| **Documents** | PDF, images, Drive files | 🚧 Planned |
+
+Planned for every record type: redact everywhere at once, a deadline and fee helper, a chain-of-custody record, and a one-click release package.
+
+Open a workspace directly with `#calendar` on the end of the URL, for example `…/foia-workbench/#calendar`.
 
 ## Why this exists
 
@@ -12,7 +25,7 @@ When a FOIA request asks for someone's calendar, Google Vault can export it as a
 
 This is a single HTML page with no server, no analytics and no outside scripts. When you open the `.ics`, the browser reads it locally and all processing happens in that browser tab. The page works the same whether you open it from this site or download `index.html` and double-click it. You can confirm this by checking the browser's Network tab, which shows no requests after the page loads.
 
-## What it does
+## Calendar workspace: what it does
 
 - **Reads the full Vault `.ics` export**, including:
   - guests and their responses (Accepted / Declined / Maybe / No response)
@@ -45,7 +58,7 @@ This is a single HTML page with no server, no analytics and no outside scripts. 
 ## How to use it
 
 1. In Google Vault, export the person's calendar for the date range and download the `.ics`. The PST export holds the same events; use the `.ics`.
-2. Open the tool and drop in the `.ics`.
+2. Open FOIA Workbench, choose **Calendar**, and drop in the `.ics`. Saved projects can be opened straight from the home screen.
 3. Set **From** and **To** to match the request.
 4. Pick an exemption in **Redact as**, then redact using the ⊘ buttons, **Redact selection**, or **Withhold entry**. Review the suggestions and apply or dismiss each one.
 5. Click **Save project** often. The `.json` file contains the unredacted calendar, so store it like the original export.

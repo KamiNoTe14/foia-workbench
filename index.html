@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FOIA Calendar Review</title>
+<title>FOIA Workbench</title>
 <style>
 :root{
   --ink:#1d2433; --muted:#5b6475; --line:#dde1e8; --bg:#f4f5f7; --card:#fff;
@@ -12,6 +12,7 @@
   --ok:#2d6a3e; --ok-bg:#e6f3e9; --hl:#ffe17a; --hl-line:#c99a00;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html,body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
 button,select,input{font:inherit}
 button{cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:6px;padding:5px 10px}
@@ -38,7 +39,33 @@ input[type=text],input[type=date],select{border:1px solid var(--line);border-rad
 .menu .pop button:hover{background:var(--accent-weak)}
 .menu .pop small{display:block;color:var(--muted);font-size:12px}
 
-#landing{max-width:720px;margin:60px auto;padding:0 16px}
+#portal{max-width:980px;margin:0 auto;padding:28px 20px 60px}
+.phead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:28px}
+.brand{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:700}
+.brand svg{width:30px;height:30px}
+.pill{font-size:12px;color:var(--ok);background:var(--ok-bg);border-radius:20px;padding:3px 10px}
+#portal h2{font-size:24px;margin:0 0 6px}
+#portal .sub{color:var(--muted);margin:0 0 20px;max-width:640px}
+.types{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.type{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:8px;text-align:left;color:var(--ink);text-decoration:none;transition:border-color .12s,box-shadow .12s}
+a.type:hover{border-color:var(--accent);box-shadow:0 6px 18px rgba(31,78,140,.12)}
+.type .ic{width:38px;height:38px;border-radius:9px;background:var(--accent-weak);color:var(--accent);display:flex;align-items:center;justify-content:center}
+.type .ic svg{width:22px;height:22px}
+.type h3{margin:4px 0 0;font-size:16px}
+.type .fmt{font-size:12px;color:var(--muted);font-family:ui-monospace,Consolas,monospace}
+.type p{margin:0;font-size:13px;color:var(--muted);flex:1}
+.type .go{font-size:13px;font-weight:600;color:var(--accent)}
+.type.soon{background:#f8f9fb;cursor:default}
+.type.soon .ic{background:#eceef2;color:#8a93a3}
+.type.soon .go{color:#8a93a3;font-weight:500}
+.resume{margin-top:22px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:var(--muted)}
+.roadmap{margin-top:16px;font-size:13px;color:var(--muted)}
+.roadmap b{color:var(--ink)}
+.back{display:inline-block;margin-bottom:14px;color:var(--accent);text-decoration:none;font-size:13px}
+.bar h1 a{color:inherit;text-decoration:none}
+.bar h1 a:hover{color:var(--accent)}
+.bar .crumb{color:var(--muted);font-weight:400}
+#landing{max-width:720px;margin:40px auto;padding:0 16px}
 #drop{border:2px dashed #b8c1cf;border-radius:12px;background:#fff;padding:48px 24px;text-align:center}
 #drop.over{border-color:var(--accent);background:var(--accent-weak)}
 #drop h2{margin:0 0 6px}
@@ -169,7 +196,7 @@ body.release .rev-only{display:none!important}
 
 <div class="bar" id="bar" hidden>
   <div class="row">
-    <h1>FOIA Calendar Review</h1>
+    <h1><a href="#" id="homeLink" title="Back to all record types">FOIA Workbench</a> <span class="crumb">/ Calendar</span></h1>
     <span class="file" id="fileName"></span>
     <span class="grow"></span>
     <button id="btnOpenIcs">Open .ics</button>
@@ -208,7 +235,45 @@ body.release .rev-only{display:none!important}
   </div>
 </div>
 
-<div id="landing">
+<div id="portal">
+  <div class="phead">
+    <div class="brand"><svg viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#1f4e8c"/><rect x="8" y="7" width="16" height="18" rx="2" fill="#fff"/><rect x="11" y="11" width="10" height="2" fill="#1f4e8c"/><rect x="11" y="15" width="6" height="2" fill="#000"/><rect x="11" y="19" width="8" height="2" fill="#1f4e8c"/></svg> FOIA Workbench</div>
+    <span class="pill">Runs offline. Nothing leaves this computer.</span>
+  </div>
+  <h2>What kind of records are you working on?</h2>
+  <p class="sub">Pick the type of export you pulled from Google Vault. Each workspace lets you review the records, redact exempt information, and produce a release copy for the requester.</p>
+  <div class="types">
+    <a class="type" href="#calendar">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg></span>
+      <h3>Calendar</h3><span class="fmt">Google Vault .ics</span>
+      <p>Events with guests and their responses. Redact fields, people or text, then print a release copy.</p>
+      <span class="go">Open calendar workspace →</span>
+    </a>
+    <div class="type soon" aria-disabled="true">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 6 8.5-6"/></svg></span>
+      <h3>Email</h3><span class="fmt">Gmail .mbox</span>
+      <p>Messages grouped into threads, with duplicates flagged and attachments listed.</p>
+      <span class="go">Coming soon</span>
+    </div>
+    <div class="type soon" aria-disabled="true">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z"/></svg></span>
+      <h3>Chat &amp; Groups</h3><span class="fmt">Google Chat / Groups .mbox</span>
+      <p>Conversations and spaces in order, with edits and deletions noted.</p>
+      <span class="go">Coming soon</span>
+    </div>
+    <div class="type soon" aria-disabled="true">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></span>
+      <h3>Documents</h3><span class="fmt">PDF, images, Drive files</span>
+      <p>Page-by-page redaction that flattens pages to images, so hidden text can't be recovered.</p>
+      <span class="go">Coming soon</span>
+    </div>
+  </div>
+  <div class="resume">Picking up someone else's work? <button id="btnResume">Open a saved project (.json)</button></div>
+  <p class="roadmap"><b>On the way for every record type:</b> redact everywhere at once, deadline &amp; fee helper, chain-of-custody record, one-click release package.</p>
+</div>
+
+<div id="landing" hidden>
+  <a href="#" class="back">← All record types</a>
   <div id="drop">
     <h2>Open a calendar export</h2>
     <p>Drop the <b>.ics</b> file from Google Vault here, or a saved review project (<b>.json</b>).</p>
@@ -950,7 +1015,7 @@ function doPrint(kind){
 function fnv(s){ let h=0x811c9dc5; for (let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,0x01000193)>>>0; } return h.toString(16).padStart(8,'0'); }
 function saveProject(){
   readMetaInputs();
-  const proj={app:'foia-calendar-review',version:1,savedAt:new Date().toISOString(),sourceName:S.sourceName,sourceHash:fnv(S.source),
+  const proj={app:'foia-calendar-review',type:'calendar',version:1,savedAt:new Date().toISOString(),sourceName:S.sourceName,sourceHash:fnv(S.source),
     settings:S.settings,meta:S.meta,customExemptions:S.customEx,redactions:S.redactions,dismissed:S.dismissed,source:S.source};
   download(slug()+'_review-project.json',JSON.stringify(proj),'application/json');
   S.dirty=false;
@@ -987,7 +1052,7 @@ function openSource(text,name,proj){
   $('optCancelled').checked=S.settings.cancelled; $('optMeta').checked=S.settings.meta; $('optPerPage').checked=!!S.settings.perPage;
   $('mOrg').value=S.meta.org; $('mReq').value=S.meta.req; $('mRequester').value=S.meta.requester; $('mPrep').value=S.meta.prep;
   $('fileName').textContent=name+' — '+S.cal.ownerName+' — '+S.events.length+' items in file';
-  $('landing').hidden=true; $('bar').hidden=false; $('app').hidden=false;
+  $('portal').hidden=true; $('landing').hidden=true; $('bar').hidden=false; $('app').hidden=false; if(location.hash!=='#calendar') history.replaceState(null,'','#calendar');
   buildInstances(); S.dirty=false; setMode('review');
 }
 function handleFile(file){
@@ -1008,7 +1073,7 @@ function handleFile(file){
   rd.readAsText(file);
 }
 
-$('btnPick').onclick=$('btnOpenIcs').onclick=$('btnOpenProj').onclick=()=>{ $('filePick').value=''; $('filePick').click(); };
+$('btnPick').onclick=$('btnOpenIcs').onclick=$('btnOpenProj').onclick=$('btnResume').onclick=()=>{ $('filePick').value=''; $('filePick').click(); };
 $('filePick').onchange=e=>handleFile(e.target.files[0]);
 const drop=$('drop');
 ['dragenter','dragover'].forEach(t=>document.addEventListener(t,e=>{e.preventDefault(); drop.classList.add('over');}));
@@ -1057,6 +1122,19 @@ menu.querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>{
 $('mdClose').onclick=()=>$('modal').classList.remove('open');
 $('modal').onclick=e=>{ if(e.target===$('modal')) $('modal').classList.remove('open'); };
 $('mdCopy').onclick=()=>{ $('mdText').select(); try{ navigator.clipboard.writeText($('mdText').value); }catch(e){ document.execCommand('copy'); } $('mdCopy').textContent='Copied'; setTimeout(()=>$('mdCopy').textContent='Copy',1200); };
+function route(){
+  if (S.source) return;                       // a workspace is open; stay put
+  const cal = location.hash==='#calendar';
+  $('portal').hidden=cal; $('landing').hidden=!cal;
+  window.scrollTo(0,0);
+}
+window.addEventListener('hashchange',route);
+route();
+$('homeLink').onclick=e=>{
+  e.preventDefault();
+  if (S.dirty && !confirm('Leave this workspace? Unsaved redactions will be lost. Use Save project first to keep them.')) return;
+  S.dirty=false; location.hash=''; location.reload();
+};
 window.addEventListener('beforeunload',e=>{ if(S.dirty){ e.preventDefault(); e.returnValue=''; } });
 document.addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'&&S.source){ e.preventDefault(); saveProject(); } });
 </script>
