@@ -339,7 +339,7 @@ body.release .rev-only{display:none!important}
 <script>
 'use strict';
 /* =====================================================================
-   FOIA Calendar Review — offline, single-file.
+   FOIA Workbench — offline, single-file. (Project files keep app id "foia-calendar-review" for compatibility.)
    ===================================================================== */
 
 const BASE_EXEMPTIONS = [
@@ -1062,7 +1062,7 @@ function handleFile(file){
     const text=String(rd.result);
     if (/^\s*\{/.test(text)){
       let p; try{ p=JSON.parse(text); }catch(e){ alert('That project file could not be read.'); return; }
-      if (p.app!=='foia-calendar-review'||!p.source){ alert('That JSON file is not a saved FOIA Calendar Review project.'); return; }
+      if (p.app!=='foia-calendar-review'||!p.source){ alert('That JSON file is not a saved FOIA Workbench project.'); return; }
       if (fnv(p.source)!==p.sourceHash && !confirm('Warning: the calendar data in this project does not match its saved fingerprint. The file may have been altered. Open anyway?')) return;
       openSource(p.source,p.sourceName||file.name,p);
     } else if (/BEGIN:VCALENDAR/.test(text)){
