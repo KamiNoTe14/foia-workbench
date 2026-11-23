@@ -1,0 +1,10 @@
+# Never commit calendar data, project files, or exports.
+*.ics
+*.pst
+*.json
+*.csv
+*.pdf
+*.xlsx
+*.txt
+uploads/
+exports/
