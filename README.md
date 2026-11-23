@@ -9,13 +9,13 @@ A free, offline workbench for school districts and other public bodies that need
 | Workspace | Vault export | Status |
 |---|---|---|
 | **Calendar** | `.ics` | ✅ Available |
-| **Email** | Gmail `.mbox` | 🚧 Planned |
+| **Email** | Gmail `.mbox` | ✅ Available |
 | **Chat & Groups** | Google Chat / Groups `.mbox` | 🚧 Planned |
 | **Documents** | PDF, images, Drive files | 🚧 Planned |
 
 Planned for every record type: redact everywhere at once, a deadline and fee helper, a chain-of-custody record, and a one-click release package.
 
-Open a workspace directly with `#calendar` on the end of the URL, for example `…/foia-workbench/#calendar`.
+Open a workspace directly with `#calendar` or `#email` on the end of the URL, for example `…/foia-workbench/#email`.
 
 ## Why this exists
 
@@ -63,6 +63,20 @@ This is a single HTML page with no server, no analytics and no outside scripts. 
 4. Pick an exemption in **Redact as**, then redact using the ⊘ buttons, **Redact selection**, or **Withhold entry**. Review the suggestions and apply or dismiss each one.
 5. Click **Save project** often. The `.json` file contains the unredacted calendar, so store it like the original export.
 6. Use **Release preview** to check the result, then **Export → Release copy → Print / Save as PDF**.
+
+## Email workspace: what it does
+
+- **Reads Google Vault Gmail exports (`.mbox`) of any practical size.** The file is read in 16 MB pieces and never loaded whole or uploaded. A 1 GB / 22,000-message test mailbox opens in about 13 seconds.
+- **Shows each message** with date, From / To / Cc / Bcc, subject, message text and attachments. Messages are numbered by date, with 200 to a page on screen.
+- **Groups conversations**, including all the notifications about the same calendar event, and **sets aside duplicate copies** (same Message-ID) so each message is released once.
+- **Lists attachments by name and size.** Use ⤓ to save one and review it separately, or ⊘ to withhold it.
+- **Suggests redactions**, the same as the calendar workspace, plus:
+  - Google Calendar RSVP / "known sender" links with personal tokens (`tok=`, `ctok=`). Google warns that anyone holding one can respond to the invite as the recipient.
+  - personal and student email addresses anywhere in the text, not only in the address lines
+  - Social Security numbers (MCL 15.243(1)(w))
+  - attachment names that look like student or personnel records
+- **Flags** phishing messages (including subjects padded with invisible zero-width characters), and mentions of personnel or legal matters.
+- **Saving a project** stores your redactions and a fingerprint of the `.mbox`, not the mailbox itself. The next person opens the project and then the same `.mbox`, and the tool warns if the file doesn't match.
 
 ## Exemptions and other states
 

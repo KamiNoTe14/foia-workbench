@@ -72,6 +72,11 @@ a.type:hover{border-color:var(--accent);box-shadow:0 6px 18px rgba(31,78,140,.12
 #drop p{color:var(--muted);margin:6px 0 18px}
 .note{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-top:16px;color:var(--muted)}
 .note b{color:var(--ink)}
+.prog{margin-top:20px;text-align:left}
+.prog .track{height:8px;background:#e6e9ef;border-radius:6px;overflow:hidden}
+.prog .track i{display:block;height:100%;width:0;background:var(--accent);transition:width .15s}
+.prog span{display:block;margin-top:8px;font-size:13px;color:var(--muted)}
+.pendingmsg{background:var(--warn-bg);color:var(--warn);border-radius:8px;padding:8px 12px}
 
 main{display:grid;grid-template-columns:310px 1fr;gap:16px;padding:16px;align-items:start}
 aside{position:sticky;top:118px;max-height:calc(100vh - 134px);overflow:auto;display:flex;flex-direction:column;gap:12px}
@@ -94,6 +99,9 @@ aside{position:sticky;top:118px;max-height:calc(100vh - 134px);overflow:auto;dis
 
 #list{min-width:0}
 .empty{color:var(--muted);padding:40px;text-align:center}
+.pager{display:flex;align-items:center;justify-content:center;gap:14px;margin:4px 0 14px;color:var(--muted);font-size:13px}
+.convbar{background:var(--accent-weak);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:13px;display:flex;gap:10px;align-items:center}
+.tog.dl{color:var(--accent)}
 .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin-bottom:12px}
 .card.withheld{background:#fafafa}
 .card.flash{outline:3px solid var(--accent)}
@@ -158,7 +166,7 @@ body.release .rev-only{display:none!important}
   @page{size:letter;margin:0}
   html,body{background:#fff}
   #sheet{padding:0.6in;-webkit-box-decoration-break:clone;box-decoration-break:clone}
-  .bar,aside,#selbtn,#modal,#landing,.sugs,.flags,.tog,.wbtn,.rev-only{display:none!important}
+  .bar,aside,#selbtn,#modal,#landing,#portal,.sugs,.flags,.tog,.wbtn,.rev-only,.pager,.convbar{display:none!important}
   main{display:block;padding:0}
   #printhead,#printfoot{display:block}
   #printhead{border-bottom:2px solid #000;padding-bottom:10px;margin-bottom:14px}
@@ -199,14 +207,14 @@ body.release .rev-only{display:none!important}
     <h1><a href="#" id="homeLink" title="Back to all record types">FOIA Workbench</a> <span class="crumb">/ Calendar</span></h1>
     <span class="file" id="fileName"></span>
     <span class="grow"></span>
-    <button id="btnOpenIcs">Open .ics</button>
+    <button id="btnOpenIcs">Open file</button>
     <button id="btnOpenProj">Open project</button>
     <button id="btnSaveProj" class="primary">Save project</button>
   </div>
   <div class="row">
     <div class="grp"><label>From</label><input type="date" id="from"></div>
     <div class="grp"><label>To</label><input type="date" id="to"></div>
-    <div class="grp rev-only"><input type="text" id="search" placeholder="Search events…" size="18"></div>
+    <div class="grp rev-only"><input type="text" id="search" placeholder="Search…" size="18"></div>
     <div class="grp rev-only"><label>Show</label>
       <select id="view">
         <option value="all">All entries</option>
@@ -249,12 +257,12 @@ body.release .rev-only{display:none!important}
       <p>Events with guests and their responses. Redact fields, people or text, then print a release copy.</p>
       <span class="go">Open calendar workspace →</span>
     </a>
-    <div class="type soon" aria-disabled="true">
+    <a class="type" href="#email">
       <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 6 8.5-6"/></svg></span>
       <h3>Email</h3><span class="fmt">Gmail .mbox</span>
-      <p>Messages grouped into threads, with duplicates flagged and attachments listed.</p>
-      <span class="go">Coming soon</span>
-    </div>
+      <p>Messages with senders, recipients and attachments. Conversations grouped, duplicates set aside, any mailbox size.</p>
+      <span class="go">Open email workspace →</span>
+    </a>
     <div class="type soon" aria-disabled="true">
       <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z"/></svg></span>
       <h3>Chat &amp; Groups</h3><span class="fmt">Google Chat / Groups .mbox</span>
@@ -275,13 +283,15 @@ body.release .rev-only{display:none!important}
 <div id="landing" hidden>
   <a href="#" class="back">← All record types</a>
   <div id="drop">
-    <h2>Open a calendar export</h2>
-    <p>Drop the <b>.ics</b> file from Google Vault here, or a saved review project (<b>.json</b>).</p>
+    <h2 id="landTitle">Open a calendar export</h2>
+    <p id="landHint">Drop the <b>.ics</b> file from Google Vault here, or a saved review project (<b>.json</b>).</p>
+    <p id="landPending" class="pendingmsg" hidden></p>
     <button class="primary" id="btnPick">Choose file…</button>
+    <div id="landProg" class="prog" hidden><div class="track"><i></i></div><span></span></div>
   </div>
   <div class="note">
-    <b>Everything stays on this computer.</b> This page has no server and makes no network requests. The calendar is read in your browser and nothing is uploaded.
-    Save your work with <b>Save project</b>. The project file holds the calendar and your redactions, so the FOIA coordinator can open that one file and pick up where you left off.
+    <b>Everything stays on this computer.</b> This page has no server and makes no network requests. Files are read in your browser and nothing is uploaded.
+    Save your work with <b>Save project</b>. For calendars the project file holds the data and your redactions. For mailboxes it holds your redactions and a fingerprint of the .mbox, so whoever picks it up opens the project and then the same .mbox file.
   </div>
 </div>
 
@@ -299,8 +309,9 @@ body.release .rev-only{display:none!important}
     <div class="panel">
       <h4>In range</h4>
       <div id="stats"></div>
-      <label class="chk"><input type="checkbox" id="optCancelled" checked> Include cancelled entries</label>
-      <label class="chk"><input type="checkbox" id="optMeta"> Show created / last-modified timestamps</label>
+      <label class="chk" data-ws="calendar"><input type="checkbox" id="optCancelled" checked> Include cancelled entries</label>
+      <label class="chk" data-ws="email" hidden><input type="checkbox" id="optDupes"> Include duplicate copies of the same message</label>
+      <label class="chk"><input type="checkbox" id="optMeta"> Show technical details (timestamps / message IDs)</label>
     </div>
     <div class="panel">
       <h4>Redactions by exemption</h4>
@@ -349,6 +360,7 @@ const BASE_EXEMPTIONS = [
   {code:'(1)(l)', label:'Medical information', desc:'Medical, counseling, or psychological facts or evaluations that would reveal an individual’s identity'},
   {code:'(1)(m)', label:'Frank communications', desc:'Communications of an advisory nature that are preliminary to a final determination of policy or action'},
   {code:'(1)(u)', label:'Security codes / passwords', desc:'Records of security measures, including access codes, passwords, and PINs (e.g., meeting join links and dial-in codes)'},
+  {code:'(1)(w)', label:'Social Security numbers', desc:'Social Security numbers'},
   {code:'(1)(y)', label:'Security of persons / property / systems', desc:'Records of measures designed to protect the security of persons, property, or information systems'},
   {code:'(1)(z)', label:'Cybersecurity', desc:'Information that could be used to make a person or system the victim of a cybersecurity incident'},
 ];
@@ -356,13 +368,15 @@ const BASE_EXEMPTIONS = [
 const S = {
   source:null, sourceName:'', cal:null, events:[], instances:[], byKey:{},
   redactions:{}, dismissed:{}, customEx:[],
-  settings:{from:'', to:'', cancelled:true, meta:false, perPage:false},
+  settings:{from:'', to:'', cancelled:true, meta:false, perPage:false, showDupes:false},
   meta:{org:'', req:'', requester:'', prep:''},
-  mode:'review', dirty:false, printing:null,
+  mode:'review', dirty:false, printing:null, page:0, conv:null,
 };
 const $ = id => document.getElementById(id);
 const exemptions = () => BASE_EXEMPTIONS.concat(S.customEx);
 const exDesc = code => (exemptions().find(e=>e.code===code)||{}).desc || '';
+const WS = {};      // workspace adapters (calendar, email, ...)
+let W = null;       // active workspace
 const cite = code => BASE_EXEMPTIONS.some(e=>e.code===code) ? 'MCL 15.243' + code : code;
 
 /* ---------------- ICS parsing ---------------- */
@@ -422,7 +436,8 @@ function ymdAdd(y,mo,d,days){ const t=new Date(Date.UTC(y,mo-1,d+days)); return 
 /* ---------------- Text cleanup ---------------- */
 function decodeEntities(s){ return s.replace(/&nbsp;/g,' ').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&#(\d+);/g,(m,n)=>String.fromCharCode(+n)).replace(/&amp;/g,'&'); }
 function htmlToText(s){
-  if (!/<\/?(?:br|p|a|b|i|u|div|span|wbr|strong|em|ul|ol|li)\b[^<>]*>/i.test(s)) return s;
+  s = s.replace(/<!--[\s\S]*?-->/g,'').replace(/<(head|style|script|title)\b[\s\S]*?<\/\1>/gi,'').replace(/<\/(tr|h[1-6]|blockquote)>/gi,'\n').replace(/<\/td>/gi,' ');
+  if (!/<\/?(?:br|p|a|b|i|u|div|span|wbr|strong|em|ul|ol|li|table|td|tr|font|html|body|img)\b[^<>]*>/i.test(s)) return s;
   s = s.replace(/<br\s*\/?>/gi,'\n').replace(/<\/p>|<p\b[^>]*>|<\/div>|<\/li>/gi,'\n');
   s = s.replace(/<a\b[^>]*?href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/gi,(m,href,txt)=>{
     const t=txt.replace(/<[^<>]*>/g,'').trim(); const h=decodeEntities(href);
@@ -586,64 +601,80 @@ function makeInstance(ev,key,startMs,endMs){
   else response='Not listed as a guest (appears on calendar)';
   x.fields={ when:whenText(x), summary:ev.summary||'(no title)', location:ev.location, organizer:personText(ev.organizer),
     response, conference:ev.conference, description:ev.description };
-  analyze(x);
+  analyzeCalendar(x);
   return x;
 }
 
 /* ---------------- Analysis: suggestions + warnings ---------------- */
-const TRUSTED=['google.com','g.co','zoom.us','microsoft.com','cloud.microsoft','aka.ms','office.com','live.com','bingapis.com','facebook.com'];
+const TRUSTED=['google.com','g.co','tel.meet','zoom.us','microsoft.com','cloud.microsoft','aka.ms','office.com','live.com','bingapis.com','facebook.com'];
 const PERSONAL_DOMAINS=/@(?:(?:gmail|yahoo|icloud|me|mac|hotmail|outlook|live|msn|aol|protonmail|proton|ymail)\.(?:com|me)|(?:comcast|att|sbcglobal|charter|frontier|verizon|wowway)\.net)$/i;
 const URL_RE=/https?:\/\/[^\s<>"')\]]+/g;
 const hostOf=u=>{ try{ return new URL(u).hostname.toLowerCase(); }catch(e){ return ''; } };
 const ownerDomain=()=> (S.cal.owner.split('@')[1]||'').toLowerCase();
 const isTrusted=h=>TRUSTED.concat(ownerDomain()||[]).some(t=>h===t||h.endsWith('.'+t));
-function analyze(x){
+const MEETING_HOST=/(^|\.)zoom\.us$|teams\.microsoft\.com$|meet\.google\.com$|^tel\.meet$|webex\.com$|gotomeeting\.com$|dialin\.teams/;
+const ACCESS_PATS=[
+  [/\b(?:passcode|password|pwd|pin)\s*[:=]?\s*[A-Za-z0-9][A-Za-z0-9.#*\-]{3,}/gi,'Passcode / PIN'],
+  [/\+?\d{10,11}(?:,{1,4}\*?\d+#?)+/g,'One-tap dial-in with meeting code'],
+  [/\b(?:meeting|webinar|conference) ID\s*:?\s*[\d ]{8,}#?/gi,'Meeting ID'],
+  [/\btel:[^\s>]+/gi,'Dial-in link'],
+];
+const EMAIL_RE=/[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}/g;
+const SSN_RE=/\b(?!000|666|9\d\d)\d{3}-(?!00)\d{2}-(?!0000)\d{4}\b/g;
+const MEDICAL_RE=/\bphysical\b(?!\s*(?:security|educat|plant|space|address|layout|fitness))|\b(dentist|dental|eye appointment|eye doctor|doctor|lab work|bloodwork|medical|surgery|chiropract\w*|dermatolog\w*|orthodont\w*|vaccin\w*)\b|^dr\.?\s/i;
+const BDAY_RE=/\bbirthday\b|\bb[- ]?day\b|\banniversary\b/i;
+const REVIEW_RE=/\b(appeal|fmla|bereavement|disciplin\w*|suspension|expulsion|investigat\w*|grievance|thrun|attorney|lawsuit|settlement|interim supt\w*|personnel|leave of absence|IEP|504)\b/i;
+const PHISH_RE=/invited you to (edit|view)|click here to proceed|view all events? details|review attached:|verify your (account|password)|password (will )?expire|shared a document with you/i;
+/* Scan text fields for access codes, meeting links, RSVP tokens, SSNs and unknown links. */
+function scanText(f, fields, addSpan, ctx){
+  for (const field of fields){
+    const txt=f[field]||''; let m;
+    URL_RE.lastIndex=0;
+    while ((m=URL_RE.exec(txt))){
+      const h=hostOf(m[0]), a=m.index, b=m.index+m[0].length;
+      if (MEETING_HOST.test(h)) addSpan(field,a,b,'(1)(u)','Meeting join link');
+      else if (/(^|\.)google\.com$/.test(h) && /[?&](c?tok|token|sig|auth)=/.test(m[0])) addSpan(field,a,b,'(1)(u)','Google link carrying a personal access token (for example, lets whoever has it RSVP as the recipient)');
+      else if (!isTrusted(h)){ ctx.badHosts.add(h); if (ctx.phish) addSpan(field,a,b,'(1)(z)','Link in a suspected phishing message'); }
+    }
+    for (const [re,why] of ACCESS_PATS){ re.lastIndex=0; while((m=re.exec(txt))) addSpan(field,m.index,m.index+m[0].trimEnd().length,'(1)(u)',why); }
+    SSN_RE.lastIndex=0; while((m=SSN_RE.exec(txt))) addSpan(field,m.index,m.index+m[0].length,'(1)(w)','Looks like a Social Security number');
+    EMAIL_RE.lastIndex=0;
+    while ((m=EMAIL_RE.exec(txt))){
+      const addr='@'+m[0].split('@')[1];
+      if (PERSONAL_DOMAINS.test(addr)) addSpan(field,m.index,m.index+m[0].length,'(1)(a)','Personal email address of a private individual');
+      else if (/^\d{5,}@/.test(m[0])) addSpan(field,m.index,m.index+m[0].length,'(1)(d)','Looks like a student account (FERPA)');
+    }
+  }
+}
+function finishAnalysis(x,sug,flags){
+  const seen=new Set(); x.sug=sug.filter(s=>{ const k=tkey(s.t); if(seen.has(k)) return false; seen.add(k); return true; });
+  x.flags=flags;
+}
+function analyzeCalendar(x){
   const f=x.fields, ev=x.ev, sug=[], flags=[];
   const addSpan=(field,start,end,code,why)=>{ if(end>start) sug.push({t:{type:'span',field,start,end},code,why,ex:f[field].slice(start,end)}); };
   if (f.conference) sug.push({t:{type:'field',field:'conference'},code:'(1)(u)',why:'Meeting join link / dial-in PIN'});
   const external=ev.organizer && !!ownerDomain() && !ev.organizer.email.toLowerCase().endsWith('@'+ownerDomain());
-  const phishText=/invited you to (edit|view)|click here to proceed|view all events? details|review attached:/i.test(f.description+' '+f.summary);
-  const badHosts=new Set();
-  for (const field of ['summary','location','description']){
-    const txt=f[field]||''; let m;
-    URL_RE.lastIndex=0;
-    while ((m=URL_RE.exec(txt))){
-      const h=hostOf(m[0]);
-      if (/(^|\.)zoom\.us$|teams\.microsoft\.com$|meet\.google\.com$|webex\.com$|gotomeeting\.com$|dialin\.teams/.test(h)) addSpan(field,m.index,m.index+m[0].length,'(1)(u)','Meeting join link');
-      else if (!isTrusted(h)){
-        badHosts.add(h);
-        if (phishText && external) addSpan(field,m.index,m.index+m[0].length,'(1)(z)','Link in suspected phishing invite');
-      }
-    }
-    const pats=[
-      [/\b(?:passcode|password|pwd|pin)\s*[:=]?\s*[A-Za-z0-9][A-Za-z0-9.#*\-]{3,}/gi,'Passcode / PIN'],
-      [/\+?\d{10,11}(?:,{1,4}\*?\d+#?)+/g,'One-tap dial-in with meeting code'],
-      [/\b(?:meeting|webinar|conference) ID\s*:?\s*[\d ]{8,}#?/gi,'Meeting ID'],
-      [/\btel:[^\s>]+/gi,'Dial-in link'],
-    ];
-    for (const [re,why] of pats){ re.lastIndex=0; while((m=re.exec(txt))) addSpan(field,m.index,m.index+m[0].trimEnd().length,'(1)(u)',why); }
-  }
-  if (phishText && external) flags.push({lvl:'danger',text:'Looks like a calendar phishing invite from an outside sender ('+ev.organizer.email+'). Its links go to '+([...badHosts].join(', ')||'unknown sites')+'. Don’t open them. Consider reporting the sender and removing the invite from the calendar. It may still be a responsive record.'});
-  else if (badHosts.size) flags.push({lvl:'warn',text:'Links to unrecognized site(s): '+[...badHosts].join(', ')+'. Verify before release.'});
+  const phish=!!external && PHISH_RE.test(f.description+' '+f.summary);
+  const ctx={badHosts:new Set(),phish};
+  scanText(f,['summary','location','description'],addSpan,ctx);
+  if (phish) flags.push({lvl:'danger',text:'Looks like a calendar phishing invite from an outside sender ('+ev.organizer.email+'). Its links go to '+([...ctx.badHosts].join(', ')||'unknown sites')+'. Don\u2019t open them. Consider reporting the sender and removing the invite from the calendar. It may still be a responsive record.'});
+  else if (ctx.badHosts.size) flags.push({lvl:'warn',text:'Links to unrecognized site(s): '+[...ctx.badHosts].join(', ')+'. Verify before release.'});
   const sm=f.summary;
-  if (/\bphysical\b(?!\s*(?:security|educat|plant|space|address|layout|fitness))|\b(dentist|dental|eye appointment|eye doctor|doctor|lab work|bloodwork|medical|surgery|chiropract\w*|dermatolog\w*|orthodont\w*|vaccin\w*)\b|^dr\.?\s/i.test(sm))
-    sug.push({t:{type:'field',field:'summary'},code:'(1)(a)',why:'Looks like a personal medical appointment'});
-  if (/\bbirthday\b|\bb[- ]?day\b|\banniversary\b/i.test(sm))
-    sug.push({t:{type:'field',field:'summary'},code:'(1)(a)',why:'Personal date of a staff member (birthday/anniversary)'});
+  if (MEDICAL_RE.test(sm)) sug.push({t:{type:'field',field:'summary'},code:'(1)(a)',why:'Looks like a personal medical appointment'});
+  if (BDAY_RE.test(sm)) sug.push({t:{type:'field',field:'summary'},code:'(1)(a)',why:'Personal date of a staff member (birthday/anniversary)'});
   if (ev.organizer && PERSONAL_DOMAINS.test(ev.organizer.email))
     sug.push({t:{type:'field',field:'organizer'},code:'(1)(a)',why:'Personal email address of a private individual'});
   for (const a of ev.attendees){
     if (PERSONAL_DOMAINS.test(a.email)) sug.push({t:{type:'attendee',id:a.id},code:'(1)(a)',why:'Personal email address of a private individual',ex:a.email});
     else if (/^\d{5,}@/.test(a.email)) sug.push({t:{type:'attendee',id:a.id},code:'(1)(d)',why:'Looks like a student account (FERPA)',ex:a.email});
   }
-  const hay=sm+'\n'+f.description;
-  const rev=hay.match(/\b(appeal|fmla|bereavement|disciplin\w*|suspension|expulsion|investigat\w*|grievance|thrun|attorney|lawsuit|settlement|interim supt\w*|personnel|leave of absence|IEP|504)\b/i);
-  if (rev) flags.push({lvl:'warn',text:'Mentions “'+rev[0]+'”. Possible personnel, legal or student matter; the coordinator should review.'});
+  const rev=(sm+'\n'+f.description).match(REVIEW_RE);
+  if (rev) flags.push({lvl:'warn',text:'Mentions \u201c'+rev[0]+'\u201d. Possible personnel, legal or student matter; the coordinator should review.'});
   if (ev.cls==='PRIVATE') flags.push({lvl:'warn',text:'Private entry created automatically from a Gmail message. Check it for personal content.'});
   if (ev.status==='CANCELLED') flags.push({lvl:'info',text:'This entry is marked Cancelled.'});
   if (ev.rrule || ev.rid) flags.push({lvl:'info',text:'Repeating entry: this is one occurrence.'});
-  const seen=new Set(); x.sug=sug.filter(s=>{ const k=tkey(s.t); if(seen.has(k)) return false; seen.add(k); return true; });
-  x.flags=flags;
+  finishAnalysis(x,sug,flags);
 }
 const tkey=t=> t.type==='span' ? 'span:'+t.field+':'+t.start+':'+t.end : t.type==='field' ? 'field:'+t.field : t.type==='attendee' ? 'att:'+t.id : 'withhold';
 
@@ -730,18 +761,19 @@ function fieldToggle(x,field){
 function row(x,label,field,content){
   return [el('dt',null,el('span',{text:label}),field?fieldToggle(x,field):null), el('dd',null,content||renderText(x,field))];
 }
-function renderAttendees(x){
+/* items = people or attachments: [{id,label,status?,comment?,file?,download?}] */
+function renderItems(x, items){
   const box=el('div',{class:'atts'}); const r=getR(x.key);
-  for (const a of x.ev.attendees){
+  for (const a of items){
     const red=r.attendees[a.id];
     if (red && release()){ box.append(el('span',{class:'att'},blk(red.code))); continue; }
-    const label=a.resource ? 'Room: '+(a.name||a.email) : (a.name ? a.name+' <'+a.email+'>' : a.email);
-    const chip=el('span',{class:'att'+(red?' red':''),title:red?'Redacted '+cite(red.code)+(red.note?' — '+red.note:''):''},
-      el('span',{class:'nm',text:label+(a.optional?' (optional)':'')}),
-      a.resource?null:el('span',{class:'st '+a.status,text:STATUS[a.status]||a.status}),
-      a.comment?el('span',{class:'cm',text:'“'+a.comment+'”'}):null,
+    const chip=el('span',{class:'att'+(red?' red':''),title:red?'Redacted '+cite(red.code)+(red.note?' \u2014 '+red.note:''):''},
+      el('span',{class:'nm',text:a.label}),
+      a.status?el('span',{class:'st '+a.status,text:STATUS[a.status]||a.status}):null,
+      a.comment?el('span',{class:'cm',text:'\u201c'+a.comment+'\u201d'}):null,
       red&&!release()?el('span',{class:'st',style:'background:#1d2433;color:#fff',text:red.code}):null,
-      release()?null:el('button',{class:'tog'+(red?' on':''),text:'⊘',title:red?'Remove redaction':'Redact this person as '+$('code').value,
+      (!release() && a.download)?el('button',{class:'tog dl',text:'\u2913',title:'Save this attachment to review it separately',onclick:a.download}):null,
+      release()?null:el('button',{class:'tog'+(red?' on':''),text:'\u2298',title:red?'Remove redaction':(a.file?'Withhold this attachment as ':'Redact this address as ')+$('code').value,
         onclick:()=>{ if(red) delRed(x.key,{type:'attendee',id:a.id}); else addRed(x.key,{type:'attendee',id:a.id},$('code').value,$('note').value); refreshCard(x.key);} })
     );
     box.append(chip);
@@ -749,43 +781,29 @@ function renderAttendees(x){
   return box;
 }
 function describeTarget(x,t){
-  if (t.type==='field') return {conference:'Conference details',summary:'Title',organizer:'Organizer',location:'Location',description:'Description'}[t.field]||t.field;
-  if (t.type==='attendee') return 'Guest';
-  if (t.type==='span') return 'Text in '+({summary:'title',location:'location',description:'description'}[t.field]||t.field);
-  return 'Entire entry';
+  if (t.type==='field') return W.fieldLabels[t.field]||t.field;
+  if (t.type==='attendee') return W.itemKind(x,t.id);
+  if (t.type==='span') return 'Text in '+(W.fieldLabels[t.field]||t.field).toLowerCase();
+  return 'Entire '+W.noun;
 }
 const recLabel=x=>'Record '+x.num+(S.printing?' of '+S.instances.length:'');
 function renderCard(x){
-  const ev=x.ev, r=getR(x.key), f=x.fields;
+  const r=getR(x.key), f=x.fields;
   const card=el('article',{class:'card'+(r.withhold?' withheld':''),id:'c-'+x.num,'data-key':x.key});
   const tags=el('span',{class:'tags'});
-  if (ev.status==='CANCELLED') tags.append(el('span',{class:'tag cx',text:'Cancelled'}));
-  if (ev.start.allDay) tags.append(el('span',{class:'tag',text:'All day'}));
-  if (ev.rrule||ev.rid) tags.append(el('span',{class:'tag',text:'Repeating'}));
+  for (const t of W.tags(x)) tags.append(el('span',{class:'tag'+(t.cls?' '+t.cls:''),text:t.text,title:t.title||null,
+    onclick:(t.onclick&&!release())?t.onclick:null,style:(t.onclick&&!release())?'cursor:pointer':null}));
   if (!release() && countR(r)) tags.append(el('span',{class:'tag',style:'background:#1d2433;color:#fff',text:countR(r)+' redaction'+(countR(r)>1?'s':'')}));
-  const wb = release()?null:el('button',{class:'wbtn'+(r.withhold?' on':''),text:r.withhold?'Withheld '+r.withhold.code:'Withhold entry',
-    title:r.withhold?'Click to stop withholding this entry':'Withhold this entire entry as '+$('code').value,
+  const wb = release()?null:el('button',{class:'wbtn'+(r.withhold?' on':''),text:r.withhold?'Withheld '+r.withhold.code:'Withhold '+W.nounShort,
+    title:r.withhold?'Click to stop withholding':'Withhold this entire '+W.noun+' as '+$('code').value,
     onclick:()=>{ if(r.withhold) delRed(x.key,{type:'withhold'}); else addRed(x.key,{type:'withhold'},$('code').value,$('note').value); refreshCard(x.key);} });
   if (r.withhold && release()){
     card.append(el('div',{class:'chead'},el('span',{class:'num',text:recLabel(x)}),el('h3',null,renderText(x,'when'))),
-      el('div',{class:'withheldmsg'},'Calendar entry withheld in full under ',cite(r.withhold.code),'.'));
+      el('div',{class:'withheldmsg'},W.Noun+' withheld in full under ',cite(r.withhold.code),'.'));
     return card;
   }
-  card.append(el('div',{class:'chead'},el('span',{class:'num',text:recLabel(x)}),el('h3',null,renderText(x,'summary')),fieldToggle(x,'summary'),tags,wb));
-  const dl=el('dl');
-  dl.append(...row(x,'When','when'));
-  if (f.location) dl.append(...row(x,'Location','location'));
-  if (f.organizer) dl.append(...row(x,'Organizer','organizer'));
-  dl.append(...row(x,S.cal.ownerName.split(' ')[0]+'’s response','response'));
-  if (ev.attendees.length) dl.append(el('dt',null,'Guests ('+ev.attendees.filter(a=>!a.resource).length+')'),el('dd',null,renderAttendees(x)));
-  if (f.conference) dl.append(...row(x,'Conference','conference'));
-  if (f.description) dl.append(...row(x,'Description','description'));
-  if (ev.attachments.length) dl.append(el('dt',null,'Attachments'),el('dd',{text:ev.attachments.join(', ')+' (file not included in calendar export)'}));
-  if (S.settings.meta){
-    if (ev.created) dl.append(el('dt',null,'Created'),el('dd',{text:fmtStamp.format(ev.created.ms)}));
-    if (ev.modified) dl.append(el('dt',null,'Last modified'),el('dd',{text:fmtStamp.format(ev.modified.ms)}));
-  }
-  card.append(dl);
+  card.append(el('div',{class:'chead'},el('span',{class:'num',text:recLabel(x)}),el('h3',null,renderText(x,W.titleField)),fieldToggle(x,W.titleField),tags,wb));
+  const dl=el('dl'); W.renderBody(x,dl); card.append(dl);
   if (!release()){
     const ps=pending(x);
     if (ps.length){
@@ -793,7 +811,7 @@ function renderCard(x){
       for (const s of ps){
         const label=describeTarget(x,s.t);
         box.append(el('div',{class:'sug'},
-          el('span',{class:'what'},'Suggest ',el('code',{text:s.code}),' — '+label+': '+s.why+' ', s.ex?el('span',{class:'ex',text:s.ex.length>70?s.ex.slice(0,67)+'…':s.ex}):null),
+          el('span',{class:'what'},'Suggest ',el('code',{text:s.code}),' \u2014 '+label+': '+s.why+' ', s.ex?el('span',{class:'ex',text:s.ex.length>70?s.ex.slice(0,67)+'\u2026':s.ex}):null),
           el('button',{text:'Apply',onclick:()=>{ addRed(x.key,s.t,s.code,s.why); refreshCard(x.key);} }),
           el('button',{text:'Dismiss',onclick:()=>{ S.dismissed[x.key+'::'+tkey(s.t)]=1; markDirty(); refreshCard(x.key);} })));
       }
@@ -803,16 +821,17 @@ function renderCard(x){
     if (S.printing==='review' && S.settings.perPage){
       card.append(el('div',{class:'rvnotes'},el('b',{text:'Reviewer notes / additional redactions'}),
         el('div',{class:'ln'}),el('div',{class:'ln'}),el('div',{class:'ln'}),el('div',{class:'ln'}),
-        el('div',{class:'sig'},el('span',{text:'\u2610 Release as is   \u2610 Redact as marked   \u2610 Withhold entry'}),el('span',{text:'Initials ______   Date ________'}))));
+        el('div',{class:'sig'},el('span',{text:'\u2610 Release as is   \u2610 Redact as marked   \u2610 Withhold '+W.nounShort}),el('span',{text:'Initials ______   Date ________'}))));
     }
   }
   return card;
 }
 function visible(x){
   if (release() || S.printing) return true;
+  if (S.conv && x.conv!==S.conv) return false;
   const q=$('search').value.trim().toLowerCase();
   if (q){
-    const hay=(Object.values(x.fields).join(' ')+' '+x.ev.attendees.map(a=>a.name+' '+a.email).join(' ')).toLowerCase();
+    const hay=(Object.values(x.fields).join(' ')+' '+W.searchExtra(x)).toLowerCase();
     if (!hay.includes(q)) return false;
   }
   const v=$('view').value, n=countR(getR(x.key));
@@ -822,11 +841,26 @@ function visible(x){
   if (v==='clean') return n===0;
   return true;
 }
+const PAGE_SIZE=200;
+function pager(pages,total){
+  const go=p=>{ S.page=p; renderList(); window.scrollTo(0,0); };
+  return el('div',{class:'pager'},
+    el('button',{text:'\u2190 Previous',disabled:S.page===0,onclick:()=>go(S.page-1)}),
+    el('span',{text:'Page '+(S.page+1)+' of '+pages+' \u00b7 '+total.toLocaleString()+' '+W.nounPl}),
+    el('button',{text:'Next \u2192',disabled:S.page>=pages-1,onclick:()=>go(S.page+1)}));
+}
 function renderList(){
   const list=$('list'); list.textContent='';
   const vis=S.instances.filter(visible);
-  if (!vis.length) list.append(el('div',{class:'empty',text:S.instances.length?'No entries match this filter.':'No calendar entries in this date range.'}));
-  const frag=document.createDocumentFragment(); for (const x of vis) frag.append(renderCard(x)); list.append(frag);
+  if (S.conv && !release()) list.append(el('div',{class:'convbar'},'Showing one conversation ('+vis.length+' '+(vis.length===1?W.noun:W.nounPl)+'). ',
+    el('button',{text:'Show all',onclick:()=>{ S.conv=null; S.page=0; renderList(); }})));
+  if (!vis.length) list.append(el('div',{class:'empty',text:S.instances.length?'Nothing matches this filter.':'No '+W.nounPl+' in this date range.'}));
+  const paged=!S.printing, pages=Math.max(1,Math.ceil(vis.length/PAGE_SIZE));
+  if (S.page>=pages) S.page=pages-1;
+  const shown=paged ? vis.slice(S.page*PAGE_SIZE,(S.page+1)*PAGE_SIZE) : vis;
+  if (paged && pages>1) list.append(pager(pages,vis.length));
+  const frag=document.createDocumentFragment(); for (const x of shown) frag.append(renderCard(x)); list.append(frag);
+  if (paged && pages>1) list.append(pager(pages,vis.length));
   renderSide();
 }
 function refreshCard(key){
@@ -840,10 +874,10 @@ function renderSide(){
   const nRed=ins.filter(x=>countR(getR(x.key))).length, nWith=ins.filter(x=>getR(x.key).withhold).length;
   const nPend=ins.reduce((a,x)=>a+pending(x).length,0);
   const st=$('stats'); st.textContent='';
-  const stat=(l,v)=>st.append(el('div',{class:'stat'},el('span',{text:l}),el('b',{text:v})));
-  stat('Calendar entries',ins.length); stat('With guest lists',ins.filter(x=>x.ev.attendees.length).length);
-  stat('Entries with redactions',nRed); stat('Withheld in full',nWith); stat('Pending suggestions',nPend);
-  $('btnApplyAll').textContent='Apply all suggestions ('+nPend+')'; $('btnApplyAll').disabled=!nPend;
+  const stat=(l,v)=>st.append(el('div',{class:'stat'},el('span',{text:l}),el('b',{text:typeof v==='number'?v.toLocaleString():v})));
+  W.stats(ins,stat);
+  stat('With redactions',nRed); stat('Withheld in full',nWith); stat('Pending suggestions',nPend);
+  $('btnApplyAll').textContent='Apply all suggestions ('+nPend.toLocaleString()+')'; $('btnApplyAll').disabled=!nPend;
   const counts={}; for (const x of ins){ const r=getR(x.key); const codes=new Set();
     if(r.withhold) codes.add(r.withhold.code); for(const v of Object.values(r.fields)) codes.add(v.code);
     for(const v of Object.values(r.attendees)) codes.add(v.code); for(const s of r.spans) codes.add(s.code);
@@ -851,17 +885,19 @@ function renderSide(){
   const lg=$('legend'); lg.textContent='';
   const used=Object.keys(counts);
   if (!used.length) lg.append(el('div',{style:'color:var(--muted)',text:'None yet.'}));
-  for (const c of used.sort()) lg.append(el('div',null,el('span',null,el('code',{text:c}),' '+((exemptions().find(e=>e.code===c)||{}).label||'')),el('b',{text:counts[c]+' entr'+(counts[c]>1?'ies':'y')})));
+  for (const c of used.sort()) lg.append(el('div',null,el('span',null,el('code',{text:c}),' '+((exemptions().find(e=>e.code===c)||{}).label||'')),el('b',{text:counts[c]+' '+(counts[c]>1?W.nounPl:W.noun)})));
   const at=$('attn'); at.textContent='';
   const items=ins.filter(x=>x.flags.some(f=>f.lvl!=='info'));
   if (!items.length) at.append(el('li',{style:'cursor:default;color:var(--muted)',text:'Nothing flagged.'}));
-  for (const x of items){
+  for (const x of items.slice(0,300)){
     const f=x.flags.find(f=>f.lvl==='danger')||x.flags.find(f=>f.lvl==='warn');
-    at.append(el('li',{onclick:()=>jumpTo(x)},el('b',{style:'color:'+(f.lvl==='danger'?'var(--danger)':'var(--warn)'),text:(f.lvl==='danger'?'⚠ ':'• ')}),'#'+x.num+' '+x.fields.summary.slice(0,48)));
+    at.append(el('li',{onclick:()=>jumpTo(x)},el('b',{style:'color:'+(f.lvl==='danger'?'var(--danger)':'var(--warn)'),text:(f.lvl==='danger'?'\u26a0 ':'\u2022 ')}),'#'+x.num+' '+(x.fields[W.titleField]||'').slice(0,48)));
   }
+  if (items.length>300) at.append(el('li',{style:'cursor:default;color:var(--muted)',text:'+ '+(items.length-300)+' more (use Show \u2192 Has warnings)'}));
 }
 function jumpTo(x){
-  $('search').value=''; $('view').value='all'; if (!document.getElementById('c-'+x.num)) renderList();
+  $('search').value=''; $('view').value='all'; S.conv=null;
+  S.page=Math.floor(S.instances.indexOf(x)/PAGE_SIZE); renderList();
   const c=document.getElementById('c-'+x.num); if(!c) return;
   c.scrollIntoView({behavior:'smooth',block:'center'}); c.classList.add('flash'); setTimeout(()=>c.classList.remove('flash'),1400);
 }
@@ -878,7 +914,7 @@ document.addEventListener('mouseup',e=>{
     const host=n=>(n.nodeType===1?n:n.parentElement)?.closest('[data-sel]');
     const a=host(rg.startContainer), b=host(rg.endContainer);
     if (!a || a!==b) return;
-    const field=a.dataset.sel; if (['when','response'].includes(field)) return;
+    const field=a.dataset.sel; if (W.noSelect.includes(field)) return;
     const pre=document.createRange(); pre.setStart(a,0); pre.setEnd(rg.startContainer,rg.startOffset);
     let start=pre.toString().length, end=start+rg.toString().length;
     const x=S.byKey[a.dataset.key], txt=x.fields[field];
@@ -903,42 +939,34 @@ function releaseText(x,field){
   for (const sp of mergeSpans(r.spans.filter(s=>s.field===field&&s.end<=text.length))){ out+=text.slice(pos,sp.start)+'[REDACTED '+sp.codes.join(', ')+']'; pos=sp.end; }
   return out+text.slice(pos);
 }
-function releaseAttendees(x){
+function releaseItems(x, items){
   const r=getR(x.key);
-  return x.ev.attendees.map(a=>{
-    if (r.attendees[a.id]) return '[REDACTED '+r.attendees[a.id].code+']';
-    if (a.resource) return 'Room: '+(a.name||a.email);
-    return (a.name?a.name+' <'+a.email+'>':a.email)+' — '+(STATUS[a.status]||a.status)+(a.optional?' (optional)':'')+(a.comment?' — "'+a.comment+'"':'');
-  }).join('\n');
+  return items.map(a=> r.attendees[a.id] ? '[REDACTED '+r.attendees[a.id].code+']' : a.releaseText||a.label).join('\n');
 }
 function csvCell(v){ v=String(v==null?'':v); if (/^[=+\-@\t\r]/.test(v)) v="'"+v; return '"'+v.replace(/"/g,'""')+'"'; }
-function download(name,text,type){
-  const blob=new Blob(['﻿'+text],{type:type||'text/csv;charset=utf-8'}); const a=el('a',{href:URL.createObjectURL(blob),download:name});
+function downloadBlob(name,blob){
+  const a=el('a',{href:URL.createObjectURL(blob),download:name});
   document.body.append(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},1000);
 }
-const slug=()=> (S.meta.req?'FOIA-'+S.meta.req.replace(/[^\w-]+/g,'_')+'_':'')+S.cal.ownerName.replace(/[^\w]+/g,'_')+'_'+S.settings.from+'_to_'+S.settings.to;
+function download(name,text,type){ downloadBlob(name,new Blob([(type&&!/csv/.test(type)?'':'\ufeff')+text],{type:type||'text/csv;charset=utf-8'})); }
+const slug=()=> (S.meta.req?'FOIA-'+S.meta.req.replace(/[^\w-]+/g,'_')+'_':'')+W.slugName()+'_'+S.settings.from+'_to_'+S.settings.to;
 function exportCSV(){
-  const head=['Record','When','Title','Location','Organizer',S.cal.ownerName+' response','Guests and responses','Conference','Description','Status'];
-  if (S.settings.meta) head.push('Created','Last modified');
-  const rows=[head];
+  const head=W.csvHead(); const rows=[head];
   for (const x of S.instances){
     const r=getR(x.key);
-    if (r.withhold){ const w='[WITHHELD '+r.withhold.code+']'; rows.push([x.num,releaseText(x,'when'),w,w,w,w,w,w,w,w].concat(S.settings.meta?[w,w]:[])); continue; }
-    const row=[x.num,releaseText(x,'when'),releaseText(x,'summary'),releaseText(x,'location'),releaseText(x,'organizer'),releaseText(x,'response'),
-      releaseAttendees(x),releaseText(x,'conference'),releaseText(x,'description'),x.ev.status==='CANCELLED'?'Cancelled':'Confirmed'];
-    if (S.settings.meta) row.push(x.ev.created?fmtStamp.format(x.ev.created.ms):'',x.ev.modified?fmtStamp.format(x.ev.modified.ms):'');
-    rows.push(row);
+    if (r.withhold){ const w='[WITHHELD '+r.withhold.code+']'; rows.push(head.map((h,i)=> i===0?x.num : i===1?releaseText(x,'when') : w)); continue; }
+    rows.push(W.csvRow(x));
   }
   download(slug()+'_RELEASE.csv',rows.map(r=>r.map(csvCell).join(',')).join('\r\n'));
 }
 function exportLog(){
-  const rows=[['Record','When','Title (original)','What was redacted','Guest','Exemption','Note / reason','Original text (INTERNAL ONLY)']];
+  const rows=[['Record','When','Title / subject (original)','What was redacted','Address or attachment','Exemption','Note / reason','Original text (INTERNAL ONLY)']];
   for (const x of S.instances){
     const r=S.redactions[x.key]; if(!r) continue;
-    const base=[x.num,x.fields.when,x.fields.summary];
-    if (r.withhold) rows.push([...base,'Entire entry','',cite(r.withhold.code),r.withhold.note,'(entire entry)']);
+    const base=[x.num,x.fields.when,x.fields[W.titleField]];
+    if (r.withhold) rows.push([...base,'Entire '+W.noun,'',cite(r.withhold.code),r.withhold.note,'(entire '+W.noun+')']);
     for (const [f,v] of Object.entries(r.fields)) rows.push([...base,describeTarget(x,{type:'field',field:f}),'',cite(v.code),v.note,x.fields[f]]);
-    for (const [id,v] of Object.entries(r.attendees)){ const a=x.ev.attendees.find(a=>a.id===id); rows.push([...base,'Guest',a?personText(a):id,cite(v.code),v.note,a?personText(a)+' — '+(STATUS[a.status]||''):id]); }
+    for (const [id,v] of Object.entries(r.attendees)){ const t=W.itemText(x,id); rows.push([...base,W.itemKind(x,id),t,cite(v.code),v.note,t]); }
     for (const s of r.spans) rows.push([...base,describeTarget(x,{type:'span',field:s.field}),'',cite(s.code),s.note,(x.fields[s.field]||'').slice(s.start,s.end)]);
   }
   if (rows.length===1){ alert('There are no redactions to log yet.'); return; }
@@ -948,25 +976,25 @@ function exemptionSummary(){
   const by={}; let withheld=0;
   for (const x of S.instances){ const r=S.redactions[x.key]; if(!r) continue;
     const add=(code,what)=>{ const b=by[code]||(by[code]={entries:new Set(),what:{}}); b.entries.add(x.key); b.what[what]=(b.what[what]||0)+1; };
-    if (r.withhold){ withheld++; add(r.withhold.code,'entire entries withheld'); }
+    if (r.withhold){ withheld++; add(r.withhold.code,'entire '+W.nounPl+' withheld'); }
     for (const [f] of Object.entries(r.fields)) add(r.fields[f].code, describeTarget(x,{type:'field',field:f}).toLowerCase());
-    for (const v of Object.values(r.attendees)) add(v.code,'guest names/addresses');
-    for (const s of r.spans) add(s.code,'portions of '+({summary:'titles',location:'locations',description:'descriptions'}[s.field]||s.field));
+    for (const [id,v] of Object.entries(r.attendees)) add(v.code, W.itemKind(x,id)==='Attachment'?'attachments':W.itemsPlural);
+    for (const s of r.spans) add(s.code,'portions of '+(W.fieldLabels[s.field]||s.field).toLowerCase());
   }
   const codes=Object.keys(by).sort();
-  if (!codes.length) return 'No redactions have been made. All '+S.instances.length+' responsive calendar entries can be released in full.';
+  const fmtDay=d=>fmtD.format(zonedToUtc(...d.split('-').map(Number),12,0,0,S.cal.tz));
+  if (!codes.length) return 'No redactions have been made. All '+S.instances.length+' responsive '+W.nounPl+' can be released in full.';
   const lines=[];
-  lines.push('The public body located '+S.instances.length+' calendar entries on the calendar of '+S.cal.ownerName+' dated '+fmtD.format(zonedToUtc(...S.settings.from.split('-').map(Number),0,0,0,S.cal.tz))+' through '+fmtD.format(zonedToUtc(...S.settings.to.split('-').map(Number),12,0,0,S.cal.tz))+'.');
+  lines.push('The public body located '+S.instances.length.toLocaleString()+' '+W.nounPl+' '+W.summaryWhere()+' dated '+fmtDay(S.settings.from)+' through '+fmtDay(S.settings.to)+'.');
   lines.push('');
   lines.push('Under MCL 15.244, exempt material was separated from non-exempt material, and the non-exempt material is provided. The material removed is described generally below:');
   lines.push('');
   for (const c of codes){
-    const b=by[c]; const whats=Object.entries(b.what).map(([w,n])=>w).join('; ');
-    lines.push('• '+cite(c)+' — '+(exDesc(c)||'(describe this exemption)')+'. Applied to '+b.entries.size+' entr'+(b.entries.size>1?'ies':'y')+' ('+whats+').');
+    const b=by[c]; const whats=Object.keys(b.what).join('; ');
+    lines.push('\u2022 '+cite(c)+' \u2014 '+(exDesc(c)||'(describe this exemption)')+'. Applied to '+b.entries.size.toLocaleString()+' '+(b.entries.size>1?W.nounPl:W.noun)+' ('+whats+').');
   }
-  if (withheld) { lines.push(''); lines.push(withheld+' entr'+(withheld>1?'ies were':'y was')+' withheld in full. The date of each withheld entry is shown in the released records.'); }
-  lines.push('');
-  lines.push('Note: Guest response status (Accepted, Declined, Maybe, No response) reflects each invitee’s reply in the calendar system and does not confirm attendance.');
+  if (withheld) { lines.push(''); lines.push(withheld+' '+(withheld>1?W.nounPl+' were':W.noun+' was')+' withheld in full. The date of each withheld '+W.noun+' is shown in the released records.'); }
+  if (W.summaryNote){ lines.push(''); lines.push(W.summaryNote); }
   return lines.join('\n');
 }
 function showModal(title,text,hint){ $('mdTitle').textContent=title; $('mdText').value=text; $('mdHint').textContent=hint||''; $('modal').classList.add('open'); }
@@ -980,26 +1008,26 @@ function doPrint(kind){
   const t=el('table');
   const tr=(k,v)=>{ if(v) t.append(el('tr',null,el('td',{text:k}),el('td',{text:v}))); };
   tr('Public body',S.meta.org); tr('FOIA request #',S.meta.req); tr('Requester',S.meta.requester);
-  tr('Calendar',S.cal.ownerName+' ('+S.cal.owner+')');
+  W.printRows(tr);
   tr('Date range',S.settings.from+' through '+S.settings.to); tr('Entries',String(S.instances.length));
   tr('Prepared by',S.meta.prep); tr('Prepared on',new Intl.DateTimeFormat('en-US',{dateStyle:'long'}).format(new Date()));
   if (review){
     ph.append(el('div',{class:'stamp',text:'INTERNAL REVIEW COPY — CONTAINS UNREDACTED INFORMATION — NOT FOR RELEASE'}),
-      el('h2',{text:'Calendar Records — '+S.cal.ownerName}),t,
-      el('p',{text:'Highlighted text is already marked for redaction; the exemption code follows it. Under each entry, “Suggest” lines are redactions the tool proposes that have not been applied yet, and shaded notes are warnings. Mark any further redactions by hand, then enter them in the tool before producing the release copy. Times are shown in '+S.cal.tz.replace('_',' ')+' time. Response status reflects each invitee’s reply, not confirmed attendance.'}));
+      el('h2',{text:W.printTitle()}),t,
+      el('p',{text:'Highlighted text is already marked for redaction; the exemption code follows it. Under each '+W.noun+', “Suggest” lines are redactions the tool proposes that have not been applied yet, and shaded notes are warnings. Mark any further redactions by hand, then enter them in the tool before producing the release copy. Times are shown in '+S.cal.tz.replace('_',' ')+' time. '+W.printNote}));
   } else {
-    ph.append(el('h2',{text:'Calendar Records — '+S.cal.ownerName}),t,
-      el('p',{text:'Times are shown in '+S.cal.tz.replace('_',' ')+' time. Guest response status (Accepted, Declined, Maybe, No response) reflects each invitee’s reply in the calendar system and does not confirm attendance. Black boxes mark information removed under the cited exemption of the Michigan Freedom of Information Act, MCL 15.243.'}));
+    ph.append(el('h2',{text:W.printTitle()}),t,
+      el('p',{text:'Times are shown in '+S.cal.tz.replace('_',' ')+' time. '+W.printNote+' Black boxes mark information removed under the cited exemption of the Michigan Freedom of Information Act, MCL 15.243.'}));
   }
   const pf=$('printfoot'); pf.textContent='';
   if (review){
     pf.append(el('b',{text:'Exemption codes'}));
     for (const e of exemptions()) pf.append(el('div',{text:cite(e.code)+' — '+e.desc}));
-    pf.append(el('div',{style:'margin-top:6px',text:'End of internal review copy. '+S.instances.length+' entries. Not for release.'}));
+    pf.append(el('div',{style:'margin-top:6px',text:'End of internal review copy. '+S.instances.length+' '+W.nounPl+'. Not for release.'}));
   } else {
     const used=new Set(); for (const x of S.instances){ const r=getR(x.key); if(r.withhold) used.add(r.withhold.code); Object.values(r.fields).forEach(v=>used.add(v.code)); Object.values(r.attendees).forEach(v=>used.add(v.code)); r.spans.forEach(s=>used.add(s.code)); }
     if (used.size){ pf.append(el('b',{text:'Exemptions cited'})); for (const c of [...used].sort()) pf.append(el('div',{text:cite(c)+' — '+exDesc(c)})); }
-    pf.append(el('div',{style:'margin-top:6px',text:'End of records. '+S.instances.length+' entries.'}));
+    pf.append(el('div',{style:'margin-top:6px',text:'End of records. '+S.instances.length+' '+W.nounPl+'.'}));
   }
   const restore=()=>{
     window.removeEventListener('afterprint',restore);
@@ -1015,12 +1043,357 @@ function doPrint(kind){
 function fnv(s){ let h=0x811c9dc5; for (let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,0x01000193)>>>0; } return h.toString(16).padStart(8,'0'); }
 function saveProject(){
   readMetaInputs();
-  const proj={app:'foia-calendar-review',type:'calendar',version:1,savedAt:new Date().toISOString(),sourceName:S.sourceName,sourceHash:fnv(S.source),
-    settings:S.settings,meta:S.meta,customExemptions:S.customEx,redactions:S.redactions,dismissed:S.dismissed,source:S.source};
+  const proj=Object.assign({app:'foia-calendar-review',version:2,savedAt:new Date().toISOString(),
+    settings:S.settings,meta:S.meta,customExemptions:S.customEx,redactions:S.redactions,dismissed:S.dismissed}, W.projectData());
   download(slug()+'_review-project.json',JSON.stringify(proj),'application/json');
   S.dirty=false;
 }
 function readMetaInputs(){ S.meta={org:$('mOrg').value,req:$('mReq').value,requester:$('mRequester').value,prep:$('mPrep').value}; }
+
+/* =====================================================================
+   EMAIL WORKSPACE — Google Vault / standard mbox.
+   The mailbox is never loaded whole: it is read in 16 MB slices, each
+   message is parsed once for headers, text and attachment names, and
+   attachments are re-read from the file only when someone saves one.
+   ===================================================================== */
+const MBOX_FROM_RE=/^From \S+ (?:Mon|Tue|Wed|Thu|Fri|Sat|Sun) (?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [ \d]\d \d\d:\d\d:\d\d \d{4}$/;
+function toBin(u8){ let s=''; const CH=0x8000; for (let i=0;i<u8.length;i+=CH) s+=String.fromCharCode.apply(null,u8.subarray(i,i+CH)); return s; }
+function binToU8(bin){ const u=new Uint8Array(bin.length); for (let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i)&255; return u; }
+function binToText(bin, cs){
+  let label=(cs||'utf-8').trim().toLowerCase().replace(/^["']|["']$/g,'');
+  if (label==='us-ascii'||label==='ascii'||label==='ansi_x3.4-1968') label='utf-8';
+  try { return new TextDecoder(label).decode(binToU8(bin)); } catch(e){ return new TextDecoder('utf-8').decode(binToU8(bin)); }
+}
+function b64(s){ s=s.replace(/[^A-Za-z0-9+/]/g,''); while (s.length%4) s+='='; try { return atob(s); } catch(e){ return ''; } }
+function decodeCTE(body,cte){
+  if (cte==='base64') return b64(body);
+  if (cte==='quoted-printable') return body.replace(/=\r?\n/g,'').replace(/=([0-9A-Fa-f]{2})/g,(m,h)=>String.fromCharCode(parseInt(h,16)));
+  return body;
+}
+function decodeWords(s){
+  if (!s) return '';
+  if (/[\x80-\xff]/.test(s)) s=binToText(s,'utf-8');
+  s=s.replace(/(=\?[^?\s]+\?[BbQq]\?[^?\s]*\?=)\s+(?==\?)/g,'$1');
+  return s.replace(/=\?([^?\s]+)\?([BbQq])\?([^?\s]*)\?=/g,(m,cs,enc,txt)=>{
+    const bin = enc.toUpperCase()==='B' ? b64(txt) : txt.replace(/_/g,' ').replace(/=([0-9A-Fa-f]{2})/g,(a,h)=>String.fromCharCode(parseInt(h,16)));
+    return binToText(bin, cs.split('*')[0]);
+  });
+}
+function parseParams(v){
+  const parts=[]; let cur='', q=false;
+  for (const ch of (v||'')){ if (ch==='"'){ q=!q; cur+=ch; } else if (ch===';'&&!q){ parts.push(cur); cur=''; } else cur+=ch; }
+  parts.push(cur);
+  const value=(parts.shift()||'').trim().toLowerCase(), params={}, ext={};
+  for (const p of parts){
+    const eq=p.indexOf('='); if (eq<0) continue;
+    const k=p.slice(0,eq).trim().toLowerCase(); let val=p.slice(eq+1).trim();
+    if (val.length>1 && val[0]==='"' && val[val.length-1]==='"') val=val.slice(1,-1).replace(/\\(.)/g,'$1');
+    const m=k.match(/^([^*]+)\*(\d+)?(\*)?$/);
+    if (m) (ext[m[1]]||(ext[m[1]]=[])).push({n:+(m[2]||0), enc:!!m[3]||(m[2]===undefined), val});
+    else params[k]=val;
+  }
+  for (const [k,arr] of Object.entries(ext)){
+    arr.sort((a,b)=>a.n-b.n); let cs='utf-8', bin='';
+    arr.forEach((a,i)=>{ let v=a.val;
+      if (a.enc){ if (i===0){ const m=v.match(/^([^']*)'[^']*'(.*)$/); if (m){ cs=m[1]||'utf-8'; v=m[2]; } }
+        bin+=v.replace(/%([0-9A-Fa-f]{2})/g,(x,h)=>String.fromCharCode(parseInt(h,16))); }
+      else bin+=v; });
+    params[k]=binToText(bin,cs);
+  }
+  return {value, params};
+}
+function splitHeadBody(bin){
+  let i=bin.indexOf('\r\n\r\n'), d=4; const j=bin.indexOf('\n\n');
+  if (i<0 || (j>=0 && j<i)){ i=j; d=2; }
+  return i<0 ? [bin,''] : [bin.slice(0,i), bin.slice(i+d)];
+}
+function parseHeaders(h){
+  const out={};
+  for (const l of h.replace(/\r\n/g,'\n').replace(/\n([ \t])/g,'$1').split('\n')){
+    const c=l.indexOf(':'); if (c<1) continue;
+    const k=l.slice(0,c).trim().toLowerCase(); (out[k]||(out[k]=[])).push(l.slice(c+1).trim());
+  }
+  return out;
+}
+function splitMultipart(b, boundary){
+  const delim='--'+boundary, parts=[];
+  let i=b.indexOf(delim); while (i>0 && b[i-1]!=='\n') i=b.indexOf(delim,i+1);
+  while (i>=0){
+    if (b.startsWith('--',i+delim.length)) break;
+    const le=b.indexOf('\n',i); if (le<0) break;
+    let j=b.indexOf(delim,le+1); while (j>=0 && b[j-1]!=='\n') j=b.indexOf(delim,j+1);
+    parts.push(b.slice(le+1, j<0?b.length:j).replace(/\r?\n$/,''));
+    i=j;
+  }
+  return parts;
+}
+function parseMime(bin, depth){
+  const [h,b]=splitHeadBody(bin), H=parseHeaders(h);
+  const ct=parseParams((H['content-type']||['text/plain'])[0]);
+  const node={H, type:ct.value||'text/plain', params:ct.params, cte:((H['content-transfer-encoding']||[''])[0]).trim().toLowerCase(),
+    disp:parseParams((H['content-disposition']||[''])[0]), body:b, parts:[]};
+  if (node.type.startsWith('multipart/') && ct.params.boundary && (depth||0)<25){
+    node.parts=splitMultipart(b, ct.params.boundary).map(p=>parseMime(p,(depth||0)+1)); node.body='';
+  }
+  return node;
+}
+function parseAddrs(s){
+  s=decodeWords(s||''); const out=[]; let cur='', q=false, ang=0;
+  for (const ch of s){
+    if (ch==='"') q=!q;
+    if (!q){ if (ch==='<') ang++; else if (ch==='>') ang=Math.max(0,ang-1); else if ((ch===','||ch===';')&&!ang){ out.push(cur); cur=''; continue; } }
+    cur+=ch;
+  }
+  out.push(cur);
+  return out.map(a=>a.trim()).filter(a=>a.includes('@')).map(a=>{
+    const m=a.match(/^(.*?)\s*<([^<>]+)>\s*$/); let name='', email=a;
+    if (m){ name=m[1].trim().replace(/^"|"$/g,'').replace(/\\(.)/g,'$1'); email=m[2].trim(); }
+    else email=a.replace(/^.*:/,'').replace(/\(.*\)/,'').trim();
+    email=email.replace(/^mailto:/i,'');
+    if (name.toLowerCase()===email.toLowerCase()) name='';
+    return {name, email, id:email.toLowerCase()};
+  });
+}
+const EXT_FOR={'text/calendar':'ics','application/ics':'ics','application/pdf':'pdf','image/png':'png','image/jpeg':'jpg','image/gif':'gif','text/plain':'txt','text/html':'html','message/rfc822':'eml'};
+function collectParts(node, out, path){
+  if (node.parts.length){ node.parts.forEach((p,i)=>collectParts(p,out,path.concat(i))); return; }
+  const fname=decodeWords(node.disp.params.filename || node.params.name || '');
+  const isAtt = node.disp.value==='attachment' || !!fname || !/^text\/(plain|html)$/.test(node.type);
+  if (isAtt){
+    const raw=node.body.length, size= node.cte==='base64' ? Math.floor(node.body.replace(/[^A-Za-z0-9+/]/g,'').length*3/4) : raw;
+    out.atts.push({path, type:node.type, size, name: fname || (node.type==='text/calendar' ? 'calendar data (invite.ics)' : 'attachment.'+(EXT_FOR[node.type]||'bin'))});
+    return;
+  }
+  const txt=binToText(decodeCTE(node.body,node.cte), node.params.charset);
+  (node.type==='text/plain' ? out.plain : out.html).push(txt);
+}
+function rawMessage(bin){
+  const nl=bin.indexOf('\n');
+  return { fromLine: bin.slice(0, nl<0?bin.length:nl).replace(/\r$/,''),
+           raw: (nl<0?'':bin.slice(nl+1)).replace(/\r?\n$/,'').replace(/^>(>*From )/gm,'$1') };
+}
+function parseMessage(bin, offset, length){
+  const {fromLine, raw}=rawMessage(bin);
+  const node=parseMime(raw,0), H=node.H, hv=k=>H[k]?decodeWords(H[k][0]):'', all=k=>(H[k]||[]).join(', ');
+  const out={plain:[],html:[],atts:[]}; collectParts(node,out,[]);
+  if (out.atts.some(a=>/\.ics$/i.test(a.name) && !/^calendar data/.test(a.name))) out.atts=out.atts.filter(a=>!/^calendar data/.test(a.name));
+  let text=out.plain.join('\n\n').trim();
+  if (!text && out.html.length) text=htmlToText(out.html.join('\n')).replace(/[ \t]+\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();
+  text=text.replace(/\r\n?/g,'\n').replace(/[ \t\u00a0]+$/gm,'').replace(/\n{3,}/g,'\n\n').trim();
+  const tok=fromLine.split(' ')[1]||'';
+  let dateMs=Date.parse(hv('date').replace(/\s*\([^)]*\)\s*$/,'').trim());
+  if (isNaN(dateMs)){ const m=tok.match(/-(\d{12,14})$/); if (m) dateMs=+m[1]; }
+  const ids=s=>(s.match(/<[^<>\s]+>/g)||[]).map(x=>x.toLowerCase());
+  return { key:'m:'+(tok && tok!=='-' && tok!=='MAILER-DAEMON' ? tok : offset), offset, length, dateMs,
+    subject:hv('subject').replace(/\s+/g,' ').trim(), from:parseAddrs(hv('from'))[0]||null,
+    to:parseAddrs(all('to')), cc:parseAddrs(all('cc')), bcc:parseAddrs(all('bcc')),
+    msgid:(ids(hv('message-id'))[0])||'', refs:ids(all('references')), irt:(ids(hv('in-reply-to'))[0])||'',
+    deliveredTo:(parseAddrs(hv('delivered-to'))[0]||{}).id||'', calNotif:!!H['x-google-calendar-notification'],
+    text, atts:out.atts };
+}
+async function indexMbox(file, onProgress){
+  const CHUNK=16*1024*1024, msgs=[], seenKey={};
+  let buf='', bufOff=0, scan=0, cur=-1, read=0;
+  const take=(s,e)=>{ const m=parseMessage(buf.slice(s,e), bufOff+s, e-s);
+    if (seenKey[m.key]) m.key+='#'+(++seenKey[m.key]); else seenKey[m.key]=1; msgs.push(m); };
+  while (true){
+    const last = read>=file.size;
+    if (!last){ const u8=new Uint8Array(await file.slice(read, read+CHUNK).arrayBuffer()); read+=u8.length; buf+=toBin(u8); }
+    const atEnd = read>=file.size;
+    while (true){
+      const i=buf.indexOf('From ',scan);
+      if (i<0){ scan=Math.max(scan, buf.length-5); break; }
+      if (i>0 && buf.charCodeAt(i-1)!==10){ scan=i+5; continue; }
+      const le=buf.indexOf('\n',i);
+      if (le<0 && !atEnd){ scan=i; break; }
+      const line=buf.slice(i, le<0?buf.length:le).replace(/\r$/,'');
+      if (MBOX_FROM_RE.test(line)){ if (cur>=0) take(cur,i); cur=i; }
+      scan = le<0 ? buf.length : le+1;
+    }
+    if (atEnd){ if (cur>=0) take(cur, buf.length); break; }
+    const cut = cur>=0 ? cur : Math.max(0, scan-5);
+    if (cut>0){ buf=buf.slice(cut); bufOff+=cut; scan-=cut; if (cur>=0) cur-=cut; }
+    onProgress(read/file.size, msgs.length);
+    await new Promise(r=>setTimeout(r,0));
+  }
+  onProgress(1, msgs.length);
+  return msgs;
+}
+function normSubject(s){
+  return (s||'').toLowerCase()
+    .replace(/^(\s*(re|fw|fwd|aw|sv|invitation|updated invitation( with note)?|accepted|declined|tentatively accepted|canceled( event)?|cancelled( event)?|new event|event canceled|reminder)\s*:\s*)+/,'')
+    .replace(/\s@\s.*$/,'').replace(/\s+/g,' ').trim();
+}
+function linkMessages(msgs){
+  const rootOf=m=> m.refs.length ? m.refs[0] : (m.irt||'');
+  const referenced=new Set(); for (const m of msgs){ const r=rootOf(m); if (r) referenced.add(r); }
+  const firstById={};
+  for (const m of msgs){
+    const r=rootOf(m);
+    m.conv = r ? 'r:'+r : (m.msgid && referenced.has(m.msgid)) ? 'r:'+m.msgid : 's:'+normSubject(m.subject);
+    if (m.msgid){ if (firstById[m.msgid]) m.dupOf=firstById[m.msgid]; else firstById[m.msgid]=m.key; }
+  }
+}
+function custodianOf(msgs, fileName){
+  const c={}; for (const m of msgs) if (m.deliveredTo) c[m.deliveredTo]=(c[m.deliveredTo]||0)+1;
+  let email=Object.entries(c).sort((a,b)=>b[1]-a[1])[0]?.[0];
+  if (!email){ const m=fileName.match(/[\w.+-]+@[\w-]+\.[\w.-]+/); email=m?m[0].toLowerCase():''; }
+  let name='';
+  for (const m of msgs){ for (const p of [m.from,...m.to,...m.cc]) if (p && p.id===email && p.name){ name=p.name; break; } if (name) break; }
+  return {email, name:name||email||'Mailbox'};
+}
+async function fingerprint(file){
+  const MB=1024*1024;
+  const head=toBin(new Uint8Array(await file.slice(0,MB).arrayBuffer()));
+  const tail=toBin(new Uint8Array(await file.slice(Math.max(0,file.size-MB)).arrayBuffer()));
+  return {size:file.size, head:fnv(head), tail:fnv(tail)};
+}
+async function saveAttachment(m, ai){
+  const a=m.atts[ai];
+  try {
+    const bin=toBin(new Uint8Array(await S.file.slice(m.offset, m.offset+m.length).arrayBuffer()));
+    let node=parseMime(rawMessage(bin).raw,0);
+    for (const i of a.path) node=node.parts[i];
+    const data=binToU8(decodeCTE(node.body,node.cte));
+    downloadBlob(a.name.replace(/[\\/:*?"<>|]+/g,'_'), new Blob([data],{type:a.type||'application/octet-stream'}));
+  } catch(e){ alert('That attachment could not be extracted: '+e.message); }
+}
+const fmtSize=n=> n<1024 ? n+' B' : n<1048576 ? Math.round(n/1024)+' KB' : (n/1048576).toFixed(1)+' MB';
+const ymd=ms=>{ const p=partsIn(ms,S.cal.tz); return p.year+'-'+String(p.month).padStart(2,'0')+'-'+String(p.day).padStart(2,'0'); };
+
+function analyzeEmail(x){
+  const f=x.fields, m=x.m, sug=[], flags=[];
+  const addSpan=(field,start,end,code,why)=>{ if(end>start) sug.push({t:{type:'span',field,start,end},code,why,ex:f[field].slice(start,end)}); };
+  const od=ownerDomain();
+  const external = !!(m.from && od && !m.from.id.endsWith('@'+od));
+  const zw=/[\u200b-\u200f\u2060\ufeff]/.test(f.subject);
+  const phish = external && (PHISH_RE.test(f.subject+' '+f.body) || zw);
+  const ctx={badHosts:new Set(), phish};
+  scanText(f,['subject','body'],addSpan,ctx);
+  if (phish) flags.push({lvl:'danger',text:'Looks like a phishing message from an outside sender ('+m.from.email+'). '+(zw?'The subject hides invisible zero-width characters, a common trick to slip past spam filters. ':'')+''+(ctx.badHosts.size?'Its links go to '+[...ctx.badHosts].slice(0,4).join(', ')+'. ':'')+'Don\u2019t open them. It may still be a responsive record.'});
+  else if (ctx.badHosts.size) flags.push({lvl:'info',text:'Links to other sites: '+[...ctx.badHosts].slice(0,5).join(', ')+(ctx.badHosts.size>5?' and '+(ctx.badHosts.size-5)+' more':'')+'.'});
+  if (MEDICAL_RE.test(f.subject)) sug.push({t:{type:'field',field:'subject'},code:'(1)(a)',why:'Subject looks like a personal medical appointment'});
+  if (BDAY_RE.test(f.subject)) sug.push({t:{type:'field',field:'subject'},code:'(1)(a)',why:'Personal date of a staff member (birthday/anniversary)'});
+  const seen=new Set();
+  for (const p of x.people){
+    if (seen.has(p.id)) continue; seen.add(p.id);
+    if (PERSONAL_DOMAINS.test(p.id)) sug.push({t:{type:'attendee',id:p.id},code:'(1)(a)',why:'Personal email address of a private individual',ex:p.email});
+    else if (/^\d{5,}@/.test(p.id)) sug.push({t:{type:'attendee',id:p.id},code:'(1)(d)',why:'Looks like a student account (FERPA)',ex:p.email});
+  }
+  const rev=(f.subject+'\n'+f.body).match(REVIEW_RE);
+  if (rev) flags.push({lvl:'warn',text:'Mentions \u201c'+rev[0]+'\u201d. Possible personnel, legal or student matter; the coordinator should review.'});
+  const real=m.atts.filter(a=>!/^(text\/calendar|application\/ics)$/.test(a.type));
+  m.atts.forEach((a,i)=>{ if (/transcript|report.?card|\biep\b|\b504\b|grades?\b|discipline|evaluation|psych/i.test(a.name)) sug.push({t:{type:'attendee',id:'file:'+i},code:'(1)(d)',why:'File name suggests a student or personnel record (transcript, IEP, grades, evaluation). Review before release',ex:a.name}); });
+  if (real.length) flags.push({lvl:'warn',text:real.length+' attachment'+(real.length>1?'s':'')+' ('+real.map(a=>a.name).slice(0,3).join(', ')+(real.length>3?'\u2026':'')+'). Contents aren\u2019t shown here: save each one (\u2913) and review it separately.'});
+  if (m.dupOf) flags.push({lvl:'info',text:'Duplicate: another copy of this message (same Message-ID) is in the export.'});
+  finishAnalysis(x,sug,flags);
+}
+function buildEmailRecords(){
+  const tz=S.cal.tz, [fy,fm,fd]=S.settings.from.split('-').map(Number), [ty,tm,td]=S.settings.to.split('-').map(Number);
+  const fromMs=zonedToUtc(fy,fm,fd,0,0,0,tz), te=ymdAdd(ty,tm,td,1), toMs=zonedToUtc(te.y,te.mo,te.d,0,0,0,tz);
+  const out=[];
+  for (const m of S.msgs){
+    if (!isNaN(m.dateMs) && (m.dateMs<fromMs || m.dateMs>=toMs)) continue;
+    if (m.dupOf && !S.settings.showDupes) continue;
+    out.push(makeEmailRecord(m));
+  }
+  out.sort((a,b)=>(a.startMs||0)-(b.startMs||0));
+  const conv={}; for (const x of out) conv[x.conv]=(conv[x.conv]||0)+1;
+  out.forEach((x,i)=>{ x.num=i+1; x.convSize=conv[x.conv]; });
+  S.instances=out; S.byKey={}; for (const x of out) S.byKey[x.key]=x;
+}
+function makeEmailRecord(m){
+  const x={key:m.key, m, startMs:m.dateMs, endMs:m.dateMs, conv:m.conv};
+  const P=(list,group)=>list.map(p=>({id:p.id, email:p.email, group, label:p.name?p.name+' <'+p.email+'>':p.email}));
+  x.people=[...(m.from?P([m.from],'From'):[]), ...P(m.to,'To'), ...P(m.cc,'Cc'), ...P(m.bcc,'Bcc')];
+  x.files=m.atts.map((a,i)=>({id:'file:'+i, file:true, label:a.name+' ('+fmtSize(a.size)+')', releaseText:a.name+' ('+a.type+', '+fmtSize(a.size)+')',
+    download:()=>saveAttachment(m,i)}));
+  x.fields={ when: isNaN(m.dateMs) ? '(no date)' : fmtD.format(m.dateMs)+' \u00b7 '+fmtT.format(m.dateMs),
+    subject: m.subject||'(no subject)', body: m.text||'', from: m.from?personText(m.from):'' };
+  analyzeEmail(x);
+  return x;
+}
+WS.email={
+  key:'email', label:'Email', noun:'email', nounPl:'emails', Noun:'Email', nounShort:'email',
+  titleField:'subject', noSelect:['when','from'], itemsPlural:'email addresses',
+  fieldLabels:{subject:'Subject', body:'Message', when:'Date', from:'From'},
+  landing:{title:'Open a mailbox export', hint:'Drop the <b>.mbox</b> file from Google Vault (Gmail export) here, or a saved email review project (<b>.json</b>). Large mailboxes are fine: the file is read in pieces and never uploaded.', accept:'.mbox,.json,application/mbox,application/json'},
+  build(){ buildEmailRecords(); },
+  itemKind(x,id){ return id.startsWith('file:') ? 'Attachment' : 'Email address'; },
+  itemText(x,id){ if (id.startsWith('file:')){ const f=x.files[+id.slice(5)]; return f?f.releaseText:id; } const p=x.people.find(p=>p.id===id); return p?p.label:id; },
+  tags(x){
+    const t=[];
+    if (x.m.calNotif) t.push({text:'Calendar notification'});
+    if (x.files.length) t.push({text:'\ud83d\udcce '+x.files.length});
+    if (x.m.dupOf) t.push({text:'Duplicate',cls:'cx'});
+    if (x.convSize>1) t.push({text:'Conversation \u00b7 '+x.convSize, title:'Show only this conversation', onclick:()=>{ S.conv=x.conv; S.page=0; renderList(); window.scrollTo(0,0); }});
+    return t;
+  },
+  renderBody(x,dl){
+    dl.append(...row(x,'Date','when'));
+    for (const g of ['From','To','Cc','Bcc']){
+      const items=x.people.filter(p=>p.group===g);
+      if (items.length) dl.append(el('dt',null,g+(items.length>1?' ('+items.length+')':'')), el('dd',null,renderItems(x,items)));
+    }
+    if (x.fields.body) dl.append(...row(x,'Message','body'));
+    if (x.files.length) dl.append(el('dt',null,'Attachments'), el('dd',null,renderItems(x,x.files),
+      el('div',{style:'font-size:12px;color:var(--muted);margin-top:4px',text:'Attachment contents are not included in this record. Produce them separately.'})));
+    if (S.settings.meta){
+      if (x.m.msgid) dl.append(el('dt',null,'Message-ID'),el('dd',{text:x.m.msgid}));
+      dl.append(el('dt',null,'Export reference'),el('dd',{text:x.key.slice(2)+' (byte '+x.m.offset.toLocaleString()+')'}));
+    }
+  },
+  searchExtra(x){ return x.people.map(p=>p.label).join(' ')+' '+x.files.map(f=>f.label).join(' '); },
+  stats(ins,stat){
+    stat('Emails',ins.length);
+    stat('With file attachments',ins.filter(x=>x.m.atts.some(a=>!/^(text\/calendar|application\/ics)$/.test(a.type))).length);
+    stat('Conversations',new Set(ins.map(x=>x.conv)).size);
+    const d=S.msgs.filter(m=>m.dupOf).length; if (d) stat(S.settings.showDupes?'Duplicates (shown)':'Duplicates (hidden)',d);
+  },
+  csvHead(){ const h=['Record','Date','Subject','From','To','Cc','Bcc','Message','Attachments']; if (S.settings.meta) h.push('Message-ID'); return h; },
+  csvRow(x){
+    const g=n=>releaseItems(x,x.people.filter(p=>p.group===n));
+    const row=[x.num,releaseText(x,'when'),releaseText(x,'subject'),g('From'),g('To'),g('Cc'),g('Bcc'),releaseText(x,'body'),releaseItems(x,x.files)];
+    if (S.settings.meta) row.push(x.m.msgid);
+    return row;
+  },
+  printTitle(){ return 'Email Records \u2014 '+S.cal.ownerName; },
+  printRows(tr){ tr('Mailbox',S.cal.ownerName+(S.cal.owner&&S.cal.owner!==S.cal.ownerName?' ('+S.cal.owner+')':'')); },
+  printNote:'Attachments are listed by name; their contents are produced separately.',
+  summaryWhere(){ return 'in the mailbox of '+S.cal.ownerName; },
+  summaryNote:'',
+  slugName(){ return (S.cal.ownerName||'mailbox').replace(/[^\w]+/g,'_')+'_email'; },
+  projectData(){ return {type:'email', sourceName:S.sourceName, fingerprint:S.fp, messageCount:S.msgs.length}; },
+};
+async function openMbox(file){
+  if (S.dirty && !confirm('You have unsaved redactions. Opening another file will discard them. Continue?')) return;
+  W=WS.email; if (location.hash!=='#email') history.replaceState(null,'','#email');
+  $('portal').hidden=true; $('landing').hidden=false; setupLanding();
+  const prog=$('landProg'); prog.hidden=false;
+  const bar=prog.querySelector('i'), txt=prog.querySelector('span');
+  const t0=performance.now();
+  let msgs;
+  try {
+    msgs=await indexMbox(file,(f,n)=>{ bar.style.width=(f*100).toFixed(1)+'%'; txt.textContent='Reading '+file.name+' \u2014 '+Math.round(f*100)+'% \u00b7 '+n.toLocaleString()+' messages'; });
+  } catch(e){ prog.hidden=true; alert('Could not read that mailbox: '+e.message); return; }
+  if (!msgs.length){ prog.hidden=true; alert('No messages were found. Is this an .mbox file from a Gmail/Vault export?'); return; }
+  txt.textContent='Organizing '+msgs.length.toLocaleString()+' messages\u2026'; await new Promise(r=>setTimeout(r,0));
+  linkMessages(msgs);
+  const fp=await fingerprint(file);
+  const proj=S.pendingProj; S.pendingProj=null;
+  if (proj && proj.fingerprint && (proj.fingerprint.size!==fp.size || proj.fingerprint.head!==fp.head || proj.fingerprint.tail!==fp.tail)){
+    if (!confirm('This mailbox file does not match the one the project was saved with ('+(proj.sourceName||'unknown file')+').\n\nRedactions could land on the wrong text. Open anyway?')){ prog.hidden=true; return; }
+  }
+  S.file=file; S.fp=fp; S.msgs=msgs; S.source='mbox'; S.sourceName=file.name;
+  const cust=custodianOf(msgs,file.name);
+  S.cal={tz:Intl.DateTimeFormat().resolvedOptions().timeZone||'America/New_York', owner:cust.email, ownerName:cust.name};
+  const dated=msgs.filter(m=>!isNaN(m.dateMs)).map(m=>m.dateMs);
+  let lo=Infinity, hi=-Infinity; for (const d of dated){ if (d<lo) lo=d; if (d>hi) hi=d; } if (!dated.length){ lo=hi=Date.now(); }
+  S.settings={from:ymd(lo), to:ymd(hi), cancelled:true, meta:false, perPage:false, showDupes:false};
+  prog.hidden=true;
+  const secs=((performance.now()-t0)/1000).toFixed(1);
+  enterWorkspace(file.name+' \u2014 '+cust.name+' \u2014 '+msgs.length.toLocaleString()+' messages ('+fmtSize(file.size)+', read in '+secs+'s)', proj);
+}
 
 /* ---------------- Mode + init ---------------- */
 function setMode(m){
@@ -1036,41 +1409,108 @@ function populateCodes(){
 }
 function schoolYearStart(){ const p=partsIn(Date.now(),S.cal.tz); const y=p.month>=8?p.year:p.year-1; return y+'-08-01'; }
 function todayStr(){ const p=partsIn(Date.now(),S.cal.tz); return p.year+'-'+String(p.month).padStart(2,'0')+'-'+String(p.day).padStart(2,'0'); }
-function openSource(text,name,proj){
-  let cal;
-  try { cal=loadCalendar(text); } catch(e){ alert('Could not read that calendar file: '+e.message); return; }
-  if (!cal.events.length){ alert('No calendar events were found in that file. Is it an .ics export?'); return; }
-  S.source=text; S.sourceName=name; S.cal=cal.cal; S.events=cal.events;
-  S.redactions={}; S.dismissed={}; S.customEx=[];
-  S.settings={from:schoolYearStart(),to:todayStr(),cancelled:true,meta:false,perPage:false};
+/* Shared: enter a workspace after its data is loaded. */
+function enterWorkspace(info, proj){
+  S.redactions={}; S.dismissed={}; S.customEx=[]; S.page=0; S.conv=null;
   if (proj){
     Object.assign(S.settings,proj.settings||{}); Object.assign(S.meta,proj.meta||{});
     S.redactions=proj.redactions||{}; S.dismissed=proj.dismissed||{}; S.customEx=proj.customExemptions||[];
   }
-  initFormatters(S.cal.tz); populateCodes();
+  initFormatters(S.cal.tz); populateCodes(); applyWs();
   $('from').value=S.settings.from; $('to').value=S.settings.to;
-  $('optCancelled').checked=S.settings.cancelled; $('optMeta').checked=S.settings.meta; $('optPerPage').checked=!!S.settings.perPage;
+  $('optCancelled').checked=S.settings.cancelled; $('optMeta').checked=S.settings.meta; $('optPerPage').checked=!!S.settings.perPage; $('optDupes').checked=!!S.settings.showDupes;
   $('mOrg').value=S.meta.org; $('mReq').value=S.meta.req; $('mRequester').value=S.meta.requester; $('mPrep').value=S.meta.prep;
-  $('fileName').textContent=name+' — '+S.cal.ownerName+' — '+S.events.length+' items in file';
-  $('portal').hidden=true; $('landing').hidden=true; $('bar').hidden=false; $('app').hidden=false; if(location.hash!=='#calendar') history.replaceState(null,'','#calendar');
-  buildInstances(); S.dirty=false; setMode('review');
+  $('fileName').textContent=info;
+  $('portal').hidden=true; $('landing').hidden=true; $('bar').hidden=false; $('app').hidden=false;
+  if (location.hash!=='#'+W.key) history.replaceState(null,'','#'+W.key);
+  W.build(); S.dirty=false; setMode('review');
 }
-function handleFile(file){
+function applyWs(){
+  document.querySelectorAll('[data-ws]').forEach(e=>{ e.hidden = e.dataset.ws!==W.key; });
+  document.querySelector('.bar .crumb').textContent='/ '+W.label;
+  document.title='FOIA Workbench \u00b7 '+W.label;
+}
+function openSource(text,name,proj){
+  let cal;
+  try { cal=loadCalendar(text); } catch(e){ alert('Could not read that calendar file: '+e.message); return; }
+  if (!cal.events.length){ alert('No calendar events were found in that file. Is it an .ics export?'); return; }
+  W=WS.calendar;
+  S.source=text; S.sourceName=name; S.cal=cal.cal; S.events=cal.events;
+  S.settings={from:schoolYearStart(),to:todayStr(),cancelled:true,meta:false,perPage:false,showDupes:false};
+  enterWorkspace(name+' \u2014 '+S.cal.ownerName+' \u2014 '+S.events.length+' items in file', proj);
+}
+WS.calendar={
+  key:'calendar', label:'Calendar', noun:'calendar entry', nounPl:'calendar entries', Noun:'Calendar entry', nounShort:'entry',
+  titleField:'summary', noSelect:['when','response'], itemsPlural:'guest names/addresses',
+  fieldLabels:{conference:'Conference details',summary:'Title',organizer:'Organizer',location:'Location',description:'Description',when:'When',response:'Response'},
+  landing:{title:'Open a calendar export', hint:'Drop the <b>.ics</b> file from Google Vault here, or a saved review project (<b>.json</b>).', accept:'.ics,.json,text/calendar,application/json'},
+  build(){ buildInstances(); },
+  itemKind(){ return 'Guest'; },
+  itemText(x,id){ const a=x.ev.attendees.find(a=>a.id===id); return a?personText(a)+' \u2014 '+(STATUS[a.status]||''):id; },
+  items(x){ return x.ev.attendees.map(a=>({id:a.id, status:a.resource?null:a.status, comment:a.comment,
+    label:(a.resource?'Room: '+(a.name||a.email):(a.name?a.name+' <'+a.email+'>':a.email))+(a.optional?' (optional)':''),
+    releaseText:a.resource?'Room: '+(a.name||a.email):(a.name?a.name+' <'+a.email+'>':a.email)+' \u2014 '+(STATUS[a.status]||a.status)+(a.optional?' (optional)':'')+(a.comment?' \u2014 "'+a.comment+'"':'')})); },
+  tags(x){ const ev=x.ev, t=[];
+    if (ev.status==='CANCELLED') t.push({text:'Cancelled',cls:'cx'});
+    if (ev.start.allDay) t.push({text:'All day'});
+    if (ev.rrule||ev.rid) t.push({text:'Repeating'});
+    return t; },
+  renderBody(x,dl){
+    const ev=x.ev, f=x.fields;
+    dl.append(...row(x,'When','when'));
+    if (f.location) dl.append(...row(x,'Location','location'));
+    if (f.organizer) dl.append(...row(x,'Organizer','organizer'));
+    dl.append(...row(x,S.cal.ownerName.split(' ')[0]+'\u2019s response','response'));
+    if (ev.attendees.length) dl.append(el('dt',null,'Guests ('+ev.attendees.filter(a=>!a.resource).length+')'),el('dd',null,renderItems(x,this.items(x))));
+    if (f.conference) dl.append(...row(x,'Conference','conference'));
+    if (f.description) dl.append(...row(x,'Description','description'));
+    if (ev.attachments.length) dl.append(el('dt',null,'Attachments'),el('dd',{text:ev.attachments.join(', ')+' (file not included in calendar export)'}));
+    if (S.settings.meta){
+      if (ev.created) dl.append(el('dt',null,'Created'),el('dd',{text:fmtStamp.format(ev.created.ms)}));
+      if (ev.modified) dl.append(el('dt',null,'Last modified'),el('dd',{text:fmtStamp.format(ev.modified.ms)}));
+    }
+  },
+  searchExtra(x){ return x.ev.attendees.map(a=>a.name+' '+a.email).join(' '); },
+  stats(ins,stat){ stat('Calendar entries',ins.length); stat('With guest lists',ins.filter(x=>x.ev.attendees.length).length); },
+  csvHead(){ const h=['Record','When','Title','Location','Organizer',S.cal.ownerName+' response','Guests and responses','Conference','Description','Status']; if (S.settings.meta) h.push('Created','Last modified'); return h; },
+  csvRow(x){ const row=[x.num,releaseText(x,'when'),releaseText(x,'summary'),releaseText(x,'location'),releaseText(x,'organizer'),releaseText(x,'response'),
+      releaseItems(x,this.items(x)),releaseText(x,'conference'),releaseText(x,'description'),x.ev.status==='CANCELLED'?'Cancelled':'Confirmed'];
+    if (S.settings.meta) row.push(x.ev.created?fmtStamp.format(x.ev.created.ms):'',x.ev.modified?fmtStamp.format(x.ev.modified.ms):'');
+    return row; },
+  printTitle(){ return 'Calendar Records \u2014 '+S.cal.ownerName; },
+  printRows(tr){ tr('Calendar',S.cal.ownerName+' ('+S.cal.owner+')'); },
+  printNote:'Guest response status (Accepted, Declined, Maybe, No response) reflects each invitee\u2019s reply in the calendar system and does not confirm attendance.',
+  summaryWhere(){ return 'on the calendar of '+S.cal.ownerName; },
+  summaryNote:'Note: Guest response status (Accepted, Declined, Maybe, No response) reflects each invitee\u2019s reply in the calendar system and does not confirm attendance.',
+  slugName(){ return S.cal.ownerName.replace(/[^\w]+/g,'_'); },
+  projectData(){ return {type:'calendar',sourceName:S.sourceName,sourceHash:fnv(S.source),source:S.source}; },
+};
+function setupLanding(){
+  const L=W.landing; $('landTitle').textContent=L.title; $('landHint').innerHTML=L.hint; $('filePick').accept=L.accept;
+  const pm=$('landPending');
+  if (S.pendingProj){ pm.hidden=false; pm.textContent='Project loaded. Now choose the mailbox it was made from: '+(S.pendingProj.sourceName||'the original .mbox file')+'.'; }
+  else pm.hidden=true;
+}
+async function handleFile(file){
   if (!file) return;
-  const rd=new FileReader();
-  rd.onload=()=>{
-    const text=String(rd.result);
-    if (/^\s*\{/.test(text)){
-      let p; try{ p=JSON.parse(text); }catch(e){ alert('That project file could not be read.'); return; }
-      if (p.app!=='foia-calendar-review'||!p.source){ alert('That JSON file is not a saved FOIA Workbench project.'); return; }
-      if (fnv(p.source)!==p.sourceHash && !confirm('Warning: the calendar data in this project does not match its saved fingerprint. The file may have been altered. Open anyway?')) return;
-      openSource(p.source,p.sourceName||file.name,p);
-    } else if (/BEGIN:VCALENDAR/.test(text)){
-      if (S.dirty && !confirm('You have unsaved redactions. Opening a new calendar will discard them. Continue?')) return;
-      openSource(text,file.name,null);
-    } else alert('Please choose an .ics calendar file or a saved project (.json).');
-  };
-  rd.readAsText(file);
+  const name=file.name.toLowerCase();
+  const head=await file.slice(0,64).text();
+  if (name.endsWith('.mbox') || /^From \S+ /.test(head)) return openMbox(file);
+  const text=await file.text();
+  if (/^\s*\{/.test(text)){
+    let p; try{ p=JSON.parse(text.replace(/^\ufeff/,'')); }catch(e){ alert('That project file could not be read.'); return; }
+    if (p.app!=='foia-calendar-review'){ alert('That JSON file is not a saved FOIA Workbench project.'); return; }
+    if (p.type==='email'){
+      if (S.dirty && !confirm('You have unsaved redactions. Opening a project will discard them. Continue?')) return;
+      S.pendingProj=p; W=WS.email; location.hash='#email'; route(); setupLanding(); return;
+    }
+    if (!p.source){ alert('That project file is missing its calendar data.'); return; }
+    if (fnv(p.source)!==p.sourceHash && !confirm('Warning: the calendar data in this project does not match its saved fingerprint. The file may have been altered. Open anyway?')) return;
+    openSource(p.source,p.sourceName||file.name,p);
+  } else if (/BEGIN:VCALENDAR/.test(text)){
+    if (S.dirty && !confirm('You have unsaved redactions. Opening a new calendar will discard them. Continue?')) return;
+    openSource(text,file.name,null);
+  } else alert('Please choose an .ics calendar, an .mbox mailbox, or a saved project (.json).');
 }
 
 $('btnPick').onclick=$('btnOpenIcs').onclick=$('btnOpenProj').onclick=$('btnResume').onclick=()=>{ $('filePick').value=''; $('filePick').click(); };
@@ -1083,12 +1523,13 @@ $('btnSaveProj').onclick=saveProject;
 $('mReview').onclick=()=>setMode('review'); $('mRelease').onclick=()=>setMode('release');
 $('from').onchange=$('to').onchange=()=>{
   if (!$('from').value||!$('to').value||$('from').value>$('to').value){ alert('Choose a valid date range.'); $('from').value=S.settings.from; $('to').value=S.settings.to; return; }
-  S.settings.from=$('from').value; S.settings.to=$('to').value; markDirty(); buildInstances(); renderList();
+  S.settings.from=$('from').value; S.settings.to=$('to').value; S.page=0; markDirty(); W.build(); renderList();
 };
-$('optCancelled').onchange=e=>{ S.settings.cancelled=e.target.checked; markDirty(); buildInstances(); renderList(); };
+$('optCancelled').onchange=e=>{ S.settings.cancelled=e.target.checked; markDirty(); W.build(); renderList(); };
+$('optDupes').onchange=e=>{ S.settings.showDupes=e.target.checked; S.page=0; markDirty(); W.build(); renderList(); };
 $('optMeta').onchange=e=>{ S.settings.meta=e.target.checked; markDirty(); renderList(); };
-let st; $('search').oninput=()=>{ clearTimeout(st); st=setTimeout(renderList,150); };
-$('view').onchange=renderList;
+let st; $('search').oninput=()=>{ clearTimeout(st); st=setTimeout(()=>{ S.page=0; renderList(); },150); };
+$('view').onchange=()=>{ S.page=0; renderList(); };
 ['mOrg','mReq','mRequester','mPrep'].forEach(id=>$(id).addEventListener('input',()=>{ readMetaInputs(); markDirty(); }));
 $('code').onchange=()=>{
   if ($('code').value!=='__custom') return;
@@ -1124,8 +1565,9 @@ $('modal').onclick=e=>{ if(e.target===$('modal')) $('modal').classList.remove('o
 $('mdCopy').onclick=()=>{ $('mdText').select(); try{ navigator.clipboard.writeText($('mdText').value); }catch(e){ document.execCommand('copy'); } $('mdCopy').textContent='Copied'; setTimeout(()=>$('mdCopy').textContent='Copy',1200); };
 function route(){
   if (S.source) return;                       // a workspace is open; stay put
-  const cal = location.hash==='#calendar';
-  $('portal').hidden=cal; $('landing').hidden=!cal;
+  const ws=WS[location.hash.slice(1)];
+  $('portal').hidden=!!ws; $('landing').hidden=!ws;
+  if (ws){ W=ws; setupLanding(); }
   window.scrollTo(0,0);
 }
 window.addEventListener('hashchange',route);
