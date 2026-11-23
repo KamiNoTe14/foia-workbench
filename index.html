@@ -126,8 +126,11 @@ mark.r::after{content:attr(data-code);font-size:10px;font-weight:600;background:
 body.release .rev-only{display:none!important}
 
 @media print{
-  @page{margin:0.6in}
+  /* Zero page margin stops the browser from printing its own URL / date / page-number header and footer.
+     The visible margin comes from #sheet padding, cloned onto every printed page. */
+  @page{size:letter;margin:0}
   html,body{background:#fff}
+  #sheet{padding:0.6in;-webkit-box-decoration-break:clone;box-decoration-break:clone}
   .bar,aside,#selbtn,#modal,#landing,.sugs,.flags,.tog,.wbtn,.rev-only{display:none!important}
   main{display:block;padding:0}
   #printhead,#printfoot{display:block}
@@ -142,8 +145,24 @@ body.release .rev-only{display:none!important}
   .chead h3{font-size:13px}
   dl{grid-template-columns:120px 1fr}
   .blk{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .st{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .st,mark.r,mark.r::after,.flag,.sug{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  /* One entry per page */
+  body.perpage .card{break-before:page;break-inside:auto;border:0;padding:0;margin:0;font-size:13px}
+  body.perpage .chead h3{font-size:16px}
+  body.perpage dt,body.perpage dd{line-height:1.75}
+  body.perpage dl{grid-template-columns:140px 1fr;gap:6px 14px}
+  body.perpage #printfoot{break-before:page;border-top:0}
+  /* Internal review copy */
+  body.reviewprint .sugs,body.reviewprint .flags{display:flex!important}
+  body.reviewprint .sug button{display:none}
+  body.reviewprint .sug{border-style:solid}
+  .rvnotes{display:block!important;margin-top:18px;border:1px solid #999;padding:8px 10px;font-size:12px;break-inside:avoid}
+  .rvnotes .ln{height:26px;border-bottom:1px solid #bbb}
+  .rvnotes .sig{display:flex;gap:40px;margin-top:12px}
+  #printhead .stamp{display:inline-block;border:2px solid #a3271f;color:#a3271f;font-weight:700;padding:2px 8px;margin-bottom:8px;letter-spacing:.04em}
 }
+.rvnotes{display:none}
+.pop .popchk{display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border-top:1px solid var(--line);margin-top:4px;font-size:13px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -179,9 +198,11 @@ body.release .rev-only{display:none!important}
       <button class="primary" id="btnExport">Export ▾</button>
       <div class="pop">
         <button data-x="print">Release copy → Print / Save as PDF<small>What the requester gets. Redacted text is removed, not just covered.</small></button>
+        <button data-x="review">Review copy for markup → Print<small>Everything visible, with planned redactions highlighted and suggestions listed. Internal only, never release.</small></button>
         <button data-x="csv">Release copy → CSV / Excel<small>Same content, one row per calendar entry.</small></button>
         <button data-x="summary">Exemption summary for response letter<small>Counts and general descriptions per MCL 15.244.</small></button>
         <button data-x="log">INTERNAL redaction log (CSV)<small>Includes the original redacted text. Do not send to requester.</small></button>
+        <label class="popchk"><input type="checkbox" id="optPerPage"><span>Print one calendar entry per page<small>For reviewing on paper. Applies to both print options.</small></span></label>
       </div>
     </div>
   </div>
@@ -199,6 +220,7 @@ body.release .rev-only{display:none!important}
   </div>
 </div>
 
+<div id="sheet">
 <div id="printhead"></div>
 <main id="app" hidden>
   <aside>
@@ -239,6 +261,7 @@ body.release .rev-only{display:none!important}
   <section id="list"></section>
 </main>
 <div id="printfoot"></div>
+</div>
 
 <button id="selbtn">Redact selection</button>
 <div id="modal"><div class="box">
@@ -268,9 +291,9 @@ const BASE_EXEMPTIONS = [
 const S = {
   source:null, sourceName:'', cal:null, events:[], instances:[], byKey:{},
   redactions:{}, dismissed:{}, customEx:[],
-  settings:{from:'', to:'', cancelled:true, meta:false},
+  settings:{from:'', to:'', cancelled:true, meta:false, perPage:false},
   meta:{org:'', req:'', requester:'', prep:''},
-  mode:'review', dirty:false,
+  mode:'review', dirty:false, printing:null,
 };
 const $ = id => document.getElementById(id);
 const exemptions = () => BASE_EXEMPTIONS.concat(S.customEx);
@@ -666,6 +689,7 @@ function describeTarget(x,t){
   if (t.type==='span') return 'Text in '+({summary:'title',location:'location',description:'description'}[t.field]||t.field);
   return 'Entire entry';
 }
+const recLabel=x=>'Record '+x.num+(S.printing?' of '+S.instances.length:'');
 function renderCard(x){
   const ev=x.ev, r=getR(x.key), f=x.fields;
   const card=el('article',{class:'card'+(r.withhold?' withheld':''),id:'c-'+x.num,'data-key':x.key});
@@ -678,11 +702,11 @@ function renderCard(x){
     title:r.withhold?'Click to stop withholding this entry':'Withhold this entire entry as '+$('code').value,
     onclick:()=>{ if(r.withhold) delRed(x.key,{type:'withhold'}); else addRed(x.key,{type:'withhold'},$('code').value,$('note').value); refreshCard(x.key);} });
   if (r.withhold && release()){
-    card.append(el('div',{class:'chead'},el('span',{class:'num',text:'Record '+x.num}),el('h3',null,renderText(x,'when'))),
+    card.append(el('div',{class:'chead'},el('span',{class:'num',text:recLabel(x)}),el('h3',null,renderText(x,'when'))),
       el('div',{class:'withheldmsg'},'Calendar entry withheld in full under ',cite(r.withhold.code),'.'));
     return card;
   }
-  card.append(el('div',{class:'chead'},el('span',{class:'num',text:'Record '+x.num}),el('h3',null,renderText(x,'summary')),fieldToggle(x,'summary'),tags,wb));
+  card.append(el('div',{class:'chead'},el('span',{class:'num',text:recLabel(x)}),el('h3',null,renderText(x,'summary')),fieldToggle(x,'summary'),tags,wb));
   const dl=el('dl');
   dl.append(...row(x,'When','when'));
   if (f.location) dl.append(...row(x,'Location','location'));
@@ -711,11 +735,16 @@ function renderCard(x){
       card.append(box);
     }
     if (x.flags.length){ const fb=el('div',{class:'flags'}); for (const fl of x.flags) fb.append(el('div',{class:'flag '+fl.lvl,text:fl.text})); card.append(fb); }
+    if (S.printing==='review' && S.settings.perPage){
+      card.append(el('div',{class:'rvnotes'},el('b',{text:'Reviewer notes / additional redactions'}),
+        el('div',{class:'ln'}),el('div',{class:'ln'}),el('div',{class:'ln'}),el('div',{class:'ln'}),
+        el('div',{class:'sig'},el('span',{text:'\u2610 Release as is   \u2610 Redact as marked   \u2610 Withhold entry'}),el('span',{text:'Initials ______   Date ________'}))));
+    }
   }
   return card;
 }
 function visible(x){
-  if (release()) return true;
+  if (release() || S.printing) return true;
   const q=$('search').value.trim().toLowerCase();
   if (q){
     const hay=(Object.values(x.fields).join(' ')+' '+x.ev.attendees.map(a=>a.name+' '+a.email).join(' ')).toLowerCase();
@@ -876,8 +905,12 @@ function exemptionSummary(){
   return lines.join('\n');
 }
 function showModal(title,text,hint){ $('mdTitle').textContent=title; $('mdText').value=text; $('mdHint').textContent=hint||''; $('modal').classList.add('open'); }
-function doPrint(){
-  const prev=S.mode; setMode('release');
+function doPrint(kind){
+  const review = kind==='review';
+  const prev=S.mode; S.printing=review?'review':'release';
+  document.body.classList.toggle('perpage',!!S.settings.perPage);
+  document.body.classList.toggle('reviewprint',review);
+  setMode(review?'review':'release');
   const ph=$('printhead'); ph.textContent='';
   const t=el('table');
   const tr=(k,v)=>{ if(v) t.append(el('tr',null,el('td',{text:k}),el('td',{text:v}))); };
@@ -885,13 +918,30 @@ function doPrint(){
   tr('Calendar',S.cal.ownerName+' ('+S.cal.owner+')');
   tr('Date range',S.settings.from+' through '+S.settings.to); tr('Entries',String(S.instances.length));
   tr('Prepared by',S.meta.prep); tr('Prepared on',new Intl.DateTimeFormat('en-US',{dateStyle:'long'}).format(new Date()));
-  ph.append(el('h2',{text:'Calendar Records — '+S.cal.ownerName}),t,
-    el('p',{text:'Times are shown in '+S.cal.tz.replace('_',' ')+' time. Guest response status (Accepted, Declined, Maybe, No response) reflects each invitee’s reply in the calendar system and does not confirm attendance. Black boxes mark information removed under the cited exemption of the Michigan Freedom of Information Act, MCL 15.243.'}));
+  if (review){
+    ph.append(el('div',{class:'stamp',text:'INTERNAL REVIEW COPY — CONTAINS UNREDACTED INFORMATION — NOT FOR RELEASE'}),
+      el('h2',{text:'Calendar Records — '+S.cal.ownerName}),t,
+      el('p',{text:'Highlighted text is already marked for redaction; the exemption code follows it. Under each entry, “Suggest” lines are redactions the tool proposes that have not been applied yet, and shaded notes are warnings. Mark any further redactions by hand, then enter them in the tool before producing the release copy. Times are shown in '+S.cal.tz.replace('_',' ')+' time. Response status reflects each invitee’s reply, not confirmed attendance.'}));
+  } else {
+    ph.append(el('h2',{text:'Calendar Records — '+S.cal.ownerName}),t,
+      el('p',{text:'Times are shown in '+S.cal.tz.replace('_',' ')+' time. Guest response status (Accepted, Declined, Maybe, No response) reflects each invitee’s reply in the calendar system and does not confirm attendance. Black boxes mark information removed under the cited exemption of the Michigan Freedom of Information Act, MCL 15.243.'}));
+  }
   const pf=$('printfoot'); pf.textContent='';
-  const used=new Set(); for (const x of S.instances){ const r=getR(x.key); if(r.withhold) used.add(r.withhold.code); Object.values(r.fields).forEach(v=>used.add(v.code)); Object.values(r.attendees).forEach(v=>used.add(v.code)); r.spans.forEach(s=>used.add(s.code)); }
-  if (used.size){ pf.append(el('b',{text:'Exemptions cited'})); for (const c of [...used].sort()) pf.append(el('div',{text:cite(c)+' — '+exDesc(c)})); }
-  pf.append(el('div',{style:'margin-top:6px',text:'End of records. '+S.instances.length+' entries.'}));
-  const restore=()=>{ window.removeEventListener('afterprint',restore); if(prev!=='release') setMode(prev); };
+  if (review){
+    pf.append(el('b',{text:'Exemption codes'}));
+    for (const e of exemptions()) pf.append(el('div',{text:cite(e.code)+' — '+e.desc}));
+    pf.append(el('div',{style:'margin-top:6px',text:'End of internal review copy. '+S.instances.length+' entries. Not for release.'}));
+  } else {
+    const used=new Set(); for (const x of S.instances){ const r=getR(x.key); if(r.withhold) used.add(r.withhold.code); Object.values(r.fields).forEach(v=>used.add(v.code)); Object.values(r.attendees).forEach(v=>used.add(v.code)); r.spans.forEach(s=>used.add(s.code)); }
+    if (used.size){ pf.append(el('b',{text:'Exemptions cited'})); for (const c of [...used].sort()) pf.append(el('div',{text:cite(c)+' — '+exDesc(c)})); }
+    pf.append(el('div',{style:'margin-top:6px',text:'End of records. '+S.instances.length+' entries.'}));
+  }
+  const restore=()=>{
+    window.removeEventListener('afterprint',restore);
+    S.printing=null; document.body.classList.remove('perpage','reviewprint');
+    $('printhead').textContent=''; $('printfoot').textContent='';
+    setMode(prev);
+  };
   window.addEventListener('afterprint',restore);
   setTimeout(()=>window.print(),50);
 }
@@ -927,14 +977,14 @@ function openSource(text,name,proj){
   if (!cal.events.length){ alert('No calendar events were found in that file. Is it an .ics export?'); return; }
   S.source=text; S.sourceName=name; S.cal=cal.cal; S.events=cal.events;
   S.redactions={}; S.dismissed={}; S.customEx=[];
-  S.settings={from:schoolYearStart(),to:todayStr(),cancelled:true,meta:false};
+  S.settings={from:schoolYearStart(),to:todayStr(),cancelled:true,meta:false,perPage:false};
   if (proj){
     Object.assign(S.settings,proj.settings||{}); Object.assign(S.meta,proj.meta||{});
     S.redactions=proj.redactions||{}; S.dismissed=proj.dismissed||{}; S.customEx=proj.customExemptions||[];
   }
   initFormatters(S.cal.tz); populateCodes();
   $('from').value=S.settings.from; $('to').value=S.settings.to;
-  $('optCancelled').checked=S.settings.cancelled; $('optMeta').checked=S.settings.meta;
+  $('optCancelled').checked=S.settings.cancelled; $('optMeta').checked=S.settings.meta; $('optPerPage').checked=!!S.settings.perPage;
   $('mOrg').value=S.meta.org; $('mReq').value=S.meta.req; $('mRequester').value=S.meta.requester; $('mPrep').value=S.meta.prep;
   $('fileName').textContent=name+' — '+S.cal.ownerName+' — '+S.events.length+' items in file';
   $('landing').hidden=true; $('bar').hidden=false; $('app').hidden=false;
@@ -992,11 +1042,14 @@ $('btnApplyAll').onclick=()=>{
 };
 const menu=$('expMenu');
 $('btnExport').onclick=e=>{ e.stopPropagation(); menu.classList.toggle('open'); };
+menu.querySelector('.pop').addEventListener('click',e=>e.stopPropagation());
+$('optPerPage').onchange=e=>{ S.settings.perPage=e.target.checked; markDirty(); };
 document.addEventListener('click',()=>menu.classList.remove('open'));
 menu.querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>{
   menu.classList.remove('open'); readMetaInputs();
   const x=b.dataset.x;
-  if (x==='print') doPrint();
+  if (x==='print') doPrint('release');
+  else if (x==='review') doPrint('review');
   else if (x==='csv') exportCSV();
   else if (x==='log') exportLog();
   else if (x==='summary') showModal('Exemption summary for the response letter',exemptionSummary(),'Paste this into the written response, then edit it. Have the FOIA coordinator or district counsel confirm each exemption before sending.');

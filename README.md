@@ -34,6 +34,9 @@ This is a single HTML page with no server, no analytics and no outside scripts. 
   - an entire entry (withheld in full)
 - **Exports:**
   - **Release copy → PDF** (print / Save as PDF) with a request header and a list of the exemptions cited
+  - **Review copy for markup → Print**: an internal, unredacted printout for people who review on paper. Planned redactions are highlighted with their exemption code, suggestions and warnings are listed under each entry, and it's stamped *Not for release*.
+  - **Print one calendar entry per page**: a checkbox in the Export menu that works with both print options. In the review copy, each page also gets a notes box with release / redact / withhold checkboxes and initials.
+  - Printed pages leave out the browser's URL and date header. If they still appear, uncheck *Headers and footers* under *More settings* in the print dialog.
   - **Release copy → CSV** for Excel
   - **Exemption summary**, a paragraph to adapt for the written response
   - **Internal redaction log (CSV)**, which includes the original text and is for the coordinator's file only
